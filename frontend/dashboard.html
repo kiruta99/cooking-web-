@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | CookWise</title>
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/recipe.css">
+    <style>
+        body { background: #F1F5F9; }
+
+        /* ── Layout ─────────────────────────────────────────── */
+        .dash-layout {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 32px;
+            margin-top: 32px;
+            margin-bottom: 80px;
+        }
+
+        /* ── Sidebar ─────────────────────────────────────────── */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .sidebar-profile {
+            background: var(--clr-white);
+            border-radius: var(--radius-md);
+            padding: 24px;
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .sidebar-avatar {
+            width: 72px; height: 72px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--clr-primary), var(--clr-accent));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px; margin: 0 auto 12px;
+            color: white; font-family: var(--font-heading); font-weight: 700;
+        }
+
+        .sidebar-name { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+        .sidebar-email { font-size: 13px; color: var(--clr-text-muted); }
+
+        .sidebar-menu {
+            background: var(--clr-white);
+            border-radius: var(--radius-md);
+            padding: 8px 0;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 20px;
+            color: var(--clr-text-muted);
+            font-weight: 500;
+            font-size: 15px;
+            border-left: 3px solid transparent;
+            transition: var(--transition-fast);
+            text-decoration: none;
+        }
+
+        .menu-item:hover, .menu-item.active {
+            background: #F0FDF4;
+            color: var(--clr-primary);
+            border-left-color: var(--clr-primary);
+        }
+
+        .menu-divider {
+            height: 1px;
+            background: var(--clr-border);
+            margin: 8px 20px;
+        }
+
+        /* ── Main content ────────────────────────────────────── */
+        .dash-main { display: flex; flex-direction: column; gap: 28px; }
+
+        /* ── Welcome bar ─────────────────────────────────────── */
+        .welcome-bar {
+            background: linear-gradient(135deg, var(--clr-primary-dark), var(--clr-primary));
+            border-radius: var(--radius-md);
+            padding: 28px 32px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            flex-wrap: wrap;
+            box-shadow: var(--shadow-md);
+        }
+
+        .welcome-bar h1 { font-size: 26px; margin-bottom: 4px; }
+        .welcome-bar p  { opacity: 0.8; font-size: 14px; }
+
+        /* ── Stats grid ──────────────────────────────────────── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: var(--clr-white);
+            border-radius: var(--radius-md);
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            cursor: pointer;
+            transition: var(--transition-normal);
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .stat-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+
+        .stat-icon {
+            width: 56px; height: 56px;
+            border-radius: var(--radius-sm);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .stat-icon.green  { background: #DCFCE7; }
+        .stat-icon.orange { background: #FEF3C7; }
+        .stat-icon.blue   { background: #DBEAFE; }
+
+        .stat-number {
+            font-size: 32px; font-weight: 800;
+            font-family: var(--font-heading);
+            color: var(--clr-text-main);
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .stat-label { font-size: 13px; color: var(--clr-text-muted); font-weight: 500; }
+
+        /* ── Calorie widget ──────────────────────────────────── */
+        .calorie-widget {
+            background: linear-gradient(135deg, #0B192C, var(--clr-primary-dark));
+            border-radius: var(--radius-md);
+            padding: 28px 32px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .calorie-widget-number {
+            font-size: 48px; font-weight: 800;
+            font-family: var(--font-heading);
+            color: var(--clr-highlight); line-height: 1; margin-bottom: 6px;
+        }
+
+        .calorie-widget-left h3 {
+            font-size: 12px; letter-spacing: 2px;
+            text-transform: uppercase; opacity: 0.7; margin-bottom: 8px;
+        }
+
+        .calorie-widget-sub {
+            font-size: 13px; opacity: 0.75;
+            display: flex; flex-direction: column; gap: 4px;
+        }
+
+        .calorie-widget-right { flex-shrink: 0; }
+
+        .calorie-widget-empty {
+            background: var(--clr-white);
+            border: 2px dashed var(--clr-border);
+            border-radius: var(--radius-md);
+            padding: 24px 32px;
+            display: flex; align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+        }
+
+        /* ── Quick actions ───────────────────────────────────── */
+        .quick-actions {
+            background: var(--clr-white);
+            border-radius: var(--radius-md);
+            padding: 28px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .quick-actions h3 { margin-bottom: 20px; font-size: 18px; }
+
+        .qa-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        .qa-card {
+            display: flex; flex-direction: column; align-items: center;
+            gap: 10px; padding: 20px 12px;
+            border: 2px solid var(--clr-border);
+            border-radius: var(--radius-md);
+            cursor: pointer; text-decoration: none; color: inherit;
+            transition: var(--transition-fast);
+            text-align: center;
+        }
+
+        .qa-card:hover {
+            border-color: var(--clr-primary);
+            background: #F0FDF4;
+            color: var(--clr-primary);
+        }
+
+        .qa-icon { font-size: 28px; }
+        .qa-label { font-size: 13px; font-weight: 600; }
+
+        /* ── Favorites section ───────────────────────────────── */
+        .section-card {
+            background: var(--clr-white);
+            border-radius: var(--radius-md);
+            padding: 28px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .section-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .section-header h3 { font-size: 18px; }
+        .section-header a  { font-size: 14px; color: var(--clr-primary); font-weight: 600; }
+
+        .fav-item {
+            display: flex; gap: 16px;
+            padding: 12px 0; border-bottom: 1px solid var(--clr-border);
+            align-items: center;
+        }
+
+        .fav-item:last-child { border-bottom: none; padding-bottom: 0; }
+
+        .fav-img {
+            width: 56px; height: 56px;
+            border-radius: var(--radius-sm); object-fit: cover; flex-shrink: 0;
+        }
+
+        .fav-info { flex: 1; }
+        .fav-name { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+        .fav-actions { display: flex; gap: 8px; align-items: center; }
+
+        /* Loading skeleton */
+        .skeleton-row {
+            display: flex; gap: 16px; padding: 12px 0; align-items: center;
+        }
+        .skeleton-sq  { width: 56px; height: 56px; flex-shrink: 0; border-radius: var(--radius-sm); }
+        .skeleton-lines { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+
+        /* ── Responsive */
+        @media (max-width: 900px) {
+            .dash-layout { grid-template-columns: 1fr; }
+            .stats-grid  { grid-template-columns: repeat(2, 1fr); }
+            .qa-grid     { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 600px) {
+            .stats-grid  { grid-template-columns: 1fr; }
+            .qa-grid     { grid-template-columns: repeat(2, 1fr); }
+            .welcome-bar { flex-direction: column; text-align: center; }
+        }
+
+        /* ── Saved Plans Modal ─────────────────────────────── */
+        .plans-modal-backdrop {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.55);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 40px 16px;
+            overflow-y: auto;
+        }
+        .plans-modal-backdrop.open { display: flex; }
+
+        .plans-modal {
+            background: var(--clr-white);
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 760px;
+            box-shadow: 0 24px 64px rgba(0,0,0,0.25);
+            animation: slideUp 0.28s cubic-bezier(.16,1,.3,1);
+        }
+        @keyframes slideUp {
+            from { transform: translateY(32px); opacity: 0; }
+            to   { transform: translateY(0);    opacity: 1; }
+        }
+
+        .plans-modal-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 24px 28px;
+            border-bottom: 1px solid var(--clr-border);
+        }
+        .plans-modal-header h2 { font-size: 20px; }
+
+        .plans-modal-close {
+            background: none; border: none;
+            font-size: 22px; cursor: pointer;
+            color: var(--clr-text-muted);
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.15s;
+        }
+        .plans-modal-close:hover { background: #F1F5F9; color: var(--clr-text-main); }
+
+        .plans-modal-body { padding: 24px 28px; display: flex; flex-direction: column; gap: 20px; }
+
+        /* individual plan card inside modal */
+        .plan-card {
+            border: 1px solid var(--clr-border);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+        }
+        .plan-card-header {
+            background: linear-gradient(135deg, var(--clr-primary-dark), var(--clr-primary));
+            color: white;
+            padding: 14px 20px;
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 12px; flex-wrap: wrap;
+        }
+        .plan-card-title { font-weight: 700; font-size: 15px; }
+        .plan-card-meta  { font-size: 12px; opacity: 0.8; }
+        .plan-card-total {
+            background: rgba(255,255,255,0.2);
+            border-radius: var(--radius-full);
+            padding: 4px 12px;
+            font-size: 13px; font-weight: 700;
+            white-space: nowrap;
+        }
+        .plan-card-body { padding: 16px 20px; display: flex; flex-direction: column; gap: 10px; }
+        .plan-meal-row {
+            display: flex; gap: 12px; align-items: center;
+            padding: 8px 12px;
+            background: #F8FAFC;
+            border-radius: var(--radius-sm);
+        }
+        .plan-meal-type {
+            font-size: 11px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 1px; width: 72px; flex-shrink: 0;
+            color: var(--clr-text-muted);
+        }
+        .plan-meal-name { flex: 1; font-weight: 600; font-size: 14px; }
+        .plan-meal-kcal {
+            font-size: 13px; font-weight: 700;
+            background: #FEF3C7; color: #92400E;
+            border-radius: var(--radius-full);
+            padding: 2px 10px; white-space: nowrap;
+        }
+        .plan-card-footer {
+            padding: 12px 20px;
+            border-top: 1px solid var(--clr-border);
+            display: flex; justify-content: flex-end;
+            gap: 10px;
+        }
+        .btn-delete-plan {
+            background: none; border: 1px solid #FECACA;
+            color: var(--clr-danger); font-size: 13px; font-weight: 600;
+            padding: 6px 16px; border-radius: var(--radius-sm);
+            cursor: pointer; transition: var(--transition-fast);
+        }
+        .btn-delete-plan:hover { background: #FEF2F2; border-color: var(--clr-danger); }
+
+        /* empty-state inside modal */
+        .plans-empty {
+            text-align: center; padding: 48px 24px;
+        }
+        .plans-empty .plans-empty-icon { font-size: 48px; margin-bottom: 16px; }
+        .plans-empty h3 { margin-bottom: 8px; font-size: 18px; }
+        .plans-empty p  { color: var(--clr-text-muted); font-size: 14px; margin-bottom: 20px; }
+
+        /* clickable stat card hint */
+        .stat-card-btn {
+            all: unset;
+            background: var(--clr-white);
+            border-radius: var(--radius-md);
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            cursor: pointer;
+            transition: var(--transition-normal);
+            width: 100%; box-sizing: border-box;
+        }
+        .stat-card-btn:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+    </style>
+</head>
+<body>
+<!-- ══ Navbar ════════════════════════════════════════════════════════════ -->
+<nav class="navbar">
+    <div class="container">
+        <a href="index.html" class="logo">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 12h20"/><path d="M20 12v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8"/>
+                <path d="M4 12V8a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v4"/>
+            </svg>
+            Cook<span>Wise</span>
+        </a>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="recipes.html">Recipes</a>
+            <a href="meal-planner.html">Meal Planner</a>
+            <a href="nutrition.html">Nutrition</a>
+            <button class="btn btn-outline" id="nav-logout-btn">Logout</button>
+        </div>
+    </div>
+</nav>
+
+<!-- ══ Main ═════════════════════════════════════════════════════════════ -->
+<main class="container">
+<div class="dash-layout">
+
+    <!-- ── Sidebar ─────────────────────────────────────── -->
+    <aside class="sidebar">
+
+        <!-- Profile card -->
+        <div class="sidebar-profile">
+            <div class="sidebar-avatar" id="sidebar-avatar">👤</div>
+            <div class="sidebar-name"  id="sidebar-name">Loading…</div>
+            <div class="sidebar-email" id="sidebar-email"></div>
+        </div>
+
+        <!-- Navigation menu -->
+        <nav class="sidebar-menu">
+            <a href="dashboard.html"   class="menu-item active">🏠 Dashboard</a>
+            <a href="my-kitchen.html"  class="menu-item">🥬 My Kitchen</a>
+            <a href="favorites.html"   class="menu-item">❤️ Favorites</a>
+            <a href="meal-planner.html" class="menu-item">📅 Meal Planner</a>
+            <a href="shopping-list.html" class="menu-item">🛒 Shopping List</a>
+            <div class="menu-divider"></div>
+            <a href="nutrition.html"    class="menu-item">🔥 Calorie Calculator</a>
+            <a href="ai-assistant.html" class="menu-item">✨ AI Chef</a>
+            <div class="menu-divider"></div>
+            <a href="recipes.html"      class="menu-item">🍽️ Discover Recipes</a>
+            <a href="cuisines.html"     class="menu-item">🌍 Cuisines</a>
+            <div class="menu-divider"></div>
+            <a href="settings.html"     class="menu-item">⚙ Settings</a>
+        </nav>
+
+    </aside>
+
+    <!-- ── Main content ────────────────────────────────── -->
+    <div class="dash-main">
+
+        <!-- Welcome bar -->
+        <div class="welcome-bar">
+            <div>
+                <h1 id="welcome-text">Welcome back, Chef! 👋</h1>
+                <p>Here's what's happening in your kitchen today.</p>
+            </div>
+            <a href="recipes.html" class="btn btn-accent" style="white-space:nowrap;">
+                🍳 Find Recipes
+            </a>
+        </div>
+
+        <!-- Stats grid (real data from API) -->
+        <div class="stats-grid">
+            <a href="favorites.html" class="stat-card">
+                <div class="stat-icon green">❤️</div>
+                <div>
+                    <div class="stat-number" id="stat-saved">—</div>
+                    <div class="stat-label">Saved Recipes</div>
+                </div>
+            </a>
+            <a href="my-kitchen.html" class="stat-card">
+                <div class="stat-icon orange">🥬</div>
+                <div>
+                    <div class="stat-number" id="stat-pantry">—</div>
+                    <div class="stat-label">Pantry Items</div>
+                </div>
+            </a>
+            <!-- Meals Planned — opens saved plans modal -->
+            <button class="stat-card-btn" id="stat-meals-card" onclick="openPlansModal()" title="View your saved meal plans">
+                <div class="stat-icon blue">📅</div>
+                <div style="text-align:left;">
+                    <div class="stat-number" id="stat-meals">—</div>
+                    <div class="stat-label">Meals Planned <span style="font-size:11px; color:var(--clr-primary);">▸ View</span></div>
+                </div>
+            </button>
+        </div>
+
+        <!-- Calorie widget -->
+        <div id="calorie-widget-area">
+            <!-- Loading indicator -->
+            <div class="calorie-widget-empty">
+                <p style="color:var(--clr-text-muted);">Loading calorie data…</p>
+            </div>
+        </div>
+
+        <!-- Quick actions -->
+        <div class="quick-actions">
+            <h3>Quick Actions</h3>
+            <div class="qa-grid">
+                <a href="recipes.html" class="qa-card">
+                    <div class="qa-icon">🔍</div>
+                    <div class="qa-label">Find Recipes</div>
+                </a>
+                <a href="my-kitchen.html" class="qa-card">
+                    <div class="qa-icon">➕</div>
+                    <div class="qa-label">Add Ingredients</div>
+                </a>
+                <a href="meal-planner.html" class="qa-card">
+                    <div class="qa-icon">📅</div>
+                    <div class="qa-label">Plan My Meals</div>
+                </a>
+                <a href="nutrition.html" class="qa-card">
+                    <div class="qa-icon">🔥</div>
+                    <div class="qa-label">Calculate Calories</div>
+                </a>
+                <a href="shopping-list.html" class="qa-card">
+                    <div class="qa-icon">🛒</div>
+                    <div class="qa-label">Shopping List</div>
+                </a>
+                <a href="ai-assistant.html" class="qa-card">
+                    <div class="qa-icon">✨</div>
+                    <div class="qa-label">AI Chef</div>
+                </a>
+                <a href="cuisines.html" class="qa-card">
+                    <div class="qa-icon">🌍</div>
+                    <div class="qa-label">Explore Cuisines</div>
+                </a>
+                <a href="favorites.html" class="qa-card">
+                    <div class="qa-icon">❤️</div>
+                    <div class="qa-label">My Favorites</div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Saved recipes preview -->
+        <div class="section-card">
+            <div class="section-header">
+                <h3>Recently Saved Recipes</h3>
+                <a href="favorites.html">View all →</a>
+            </div>
+            <div id="favorites-list">
+                <!-- Skeleton -->
+                <div class="skeleton-row">
+                    <div class="skeleton skeleton-sq"></div>
+                    <div class="skeleton-lines">
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-text short"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /dash-main -->
+
+</div><!-- /dash-layout -->
+</main>
+
+<!-- ══ Saved Plans Modal ════════════════════════════════════════════════════ -->
+<div class="plans-modal-backdrop" id="plans-modal-backdrop" onclick="closePlansModalOnBackdrop(event)">
+    <div class="plans-modal" role="dialog" aria-modal="true" aria-labelledby="plans-modal-title">
+        <div class="plans-modal-header">
+            <h2 id="plans-modal-title">📅 Saved Meal Plans</h2>
+            <button class="plans-modal-close" onclick="closePlansModal()" aria-label="Close">✕</button>
+        </div>
+        <div class="plans-modal-body" id="plans-modal-body">
+            <p style="color:var(--clr-text-muted);">Loading…</p>
+        </div>
+    </div>
+</div>
+
+<script src="./js/app.js"></script>
+<script>
+/* ── Constants ──────────────────────────────────────────── */
+const ACTIVITY_LABELS_DASH = {
+    sedentary:   'Sedentary',
+    light:       'Lightly Active',
+    moderate:    'Moderately Active',
+    active:      'Very Active',
+    very_active: 'Extra Active'
+};
+
+/* ── Boot ───────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const user = await window.authPromise;
+        if (!user) { window.location.href = 'login.html'; return; }
+
+        // Profile card
+        const displayName = user.name || user.username;
+        document.getElementById('welcome-text').textContent = `Welcome back, ${displayName}! 👋`;
+        document.getElementById('sidebar-name').textContent  = displayName;
+        document.getElementById('sidebar-email').textContent = user.email || '';
+        document.getElementById('sidebar-avatar').textContent =
+            displayName.charAt(0).toUpperCase();
+
+        // Load all data in parallel
+        await Promise.all([
+            loadStats(),
+            loadCalorieWidget(),
+            loadRecentFavorites()
+        ]);
+
+    } catch (e) {
+        console.error('Dashboard init error:', e);
+        window.location.href = 'login.html';
+    }
+});
+
+/* ── Real Stats from /api/dashboard/stats ────────────────── */
+async function loadStats() {
+    try {
+        const res = await fetch(`${API_BASE_URL}/dashboard/stats`, { credentials: 'include' });
+        if (!res.ok) throw new Error('Stats API failed');
+        const data = await res.json();
+
+        document.getElementById('stat-saved').textContent  = data.savedRecipes;
+        document.getElementById('stat-pantry').textContent = data.pantryItems;
+        document.getElementById('stat-meals').textContent  = data.mealsPlanned;
+    } catch (e) {
+        console.error('Dashboard stats error:', e);
+        document.getElementById('stat-saved').textContent  = '—';
+        document.getElementById('stat-pantry').textContent = '—';
+        document.getElementById('stat-meals').textContent  = '—';
+    }
+}
+
+/* ── Calorie Widget ─────────────────────────────────────── */
+async function loadCalorieWidget() {
+    const area = document.getElementById('calorie-widget-area');
+    try {
+        const res = await fetch(`${API_BASE_URL}/nutrition/profile`, { credentials: 'include' });
+        if (res.ok) {
+            const data = await res.json();
+            if (data.profile) {
+                const p = data.profile;
+                const actLabel = ACTIVITY_LABELS_DASH[p.activity_level] || p.activity_level;
+                area.innerHTML = `
+                    <div class="calorie-widget">
+                        <div class="calorie-widget-left">
+                            <h3>Daily Calorie Estimate</h3>
+                            <div class="calorie-widget-number">🔥 ${p.tdee.toLocaleString()} kcal/day</div>
+                            <div class="calorie-widget-sub">
+                                <span>BMR: ${p.bmr.toLocaleString()} kcal &nbsp;·&nbsp; Activity: ${actLabel}</span>
+                                <span style="opacity:0.6; font-size:11px;">Estimated · last updated ${new Date(p.calculated_at).toLocaleDateString()}</span>
+                            </div>
+                        </div>
+                        <div class="calorie-widget-right">
+                            <a href="nutrition.html" class="btn btn-accent" style="font-size:14px; padding:10px 20px;">🔄 Recalculate</a>
+                        </div>
+                    </div>`;
+                return;
+            }
+        }
+    } catch (e) {
+        console.error('Calorie widget error:', e);
+    }
+    // No profile yet
+    area.innerHTML = `
+        <div class="calorie-widget-empty">
+            <div>
+                <p style="font-weight:600; color:var(--clr-text-main); margin-bottom:6px;">🔥 Daily Calorie Estimate</p>
+                <p style="color:var(--clr-text-muted); font-size:14px;">You haven't calculated your daily calorie needs yet.</p>
+            </div>
+            <a href="nutrition.html" class="btn btn-primary" style="white-space:nowrap; font-size:14px; padding:10px 20px;">Calculate Now</a>
+        </div>`;
+}
+
+/* ── Recent Favorites ───────────────────────────────────── */
+async function loadRecentFavorites() {
+    const list = document.getElementById('favorites-list');
+    try {
+        const res = await fetch(`${API_BASE_URL}/favorites`, { credentials: 'include' });
+        if (!res.ok) throw new Error('Favorites API failed');
+        const data = await res.json();
+        const favs = (data.favorites || []).slice(0, 5); // show 5 most recent
+
+        if (favs.length === 0) {
+            list.innerHTML = `
+                <div class="empty-state" style="padding:32px 0; text-align:center;">
+                    <div style="font-size:32px; margin-bottom:12px;">🍽️</div>
+                    <p>You haven't saved any recipes yet.</p>
+                    <a href="recipes.html" class="btn btn-outline" style="margin-top:16px; padding:8px 20px; font-size:14px;">Discover Recipes</a>
+                </div>`;
+            return;
+        }
+
+        list.innerHTML = favs.map(f => `
+            <div class="fav-item">
+                <img class="fav-img" src="${f.meal_thumb}" alt="${f.meal_name}"
+                     onerror="this.style.background='#eee'; this.removeAttribute('src');">
+                <div class="fav-info">
+                    <div class="fav-name">${f.meal_name}</div>
+                    <div style="font-size:12px; color:var(--clr-text-muted);">Saved ${new Date(f.created_at).toLocaleDateString()}</div>
+                </div>
+                <div class="fav-actions">
+                    <a href="recipe-details.html?id=${f.meal_id}"
+                       class="btn btn-outline" style="padding:6px 14px; font-size:13px;">View</a>
+                    <button onclick="removeFav(${f.id}, this)"
+                        style="background:none; border:none; color:var(--clr-danger);
+                               cursor:pointer; font-size:13px; font-weight:600;">Remove</button>
+                </div>
+            </div>`).join('');
+
+    } catch (e) {
+        console.error('Favorites error:', e);
+        list.innerHTML = '<p style="color:var(--clr-text-muted); padding:16px 0;">Unable to load saved recipes.</p>';
+    }
+}
+
+async function removeFav(id, btn) {
+    try {
+        const res = await fetch(`${API_BASE_URL}/favorites/${id}`, { method: 'DELETE', credentials: 'include' });
+        if (res.ok) {
+            // Remove DOM row + refresh stats
+            btn.closest('.fav-item').remove();
+            loadStats();
+        }
+    } catch (e) { console.error(e); }
+}
+
+/* ── Saved Plans Modal ───────────────────────────────────── */
+function openPlansModal() {
+    document.getElementById('plans-modal-backdrop').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    renderPlansModal();
+}
+
+function closePlansModal() {
+    document.getElementById('plans-modal-backdrop').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+function closePlansModalOnBackdrop(e) {
+    if (e.target === document.getElementById('plans-modal-backdrop')) closePlansModal();
+}
+
+// Close on Escape
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePlansModal(); });
+
+async function renderPlansModal() {
+    const body = document.getElementById('plans-modal-body');
+    body.innerHTML = '<p style="color:var(--clr-text-muted);">Loading…</p>';
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/meal-plans/saved-all`, { credentials: 'include' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const plans = data.plans || [];
+
+        if (plans.length === 0) {
+            body.innerHTML = `
+                <div class="plans-empty">
+                    <div class="plans-empty-icon">📅</div>
+                    <h3>No saved meal plans yet</h3>
+                    <p>Generate a meal plan and click <strong>Save Meal Plan</strong> to save it here.</p>
+                    <a href="meal-planner.html" class="btn btn-primary" style="padding:10px 24px; font-size:14px;">
+                        📅 Plan My Meals
+                    </a>
+                </div>`;
+            return;
+        }
+
+        const mealTypeEmoji = { breakfast: '🌅', lunch: '☀️', dinner: '🌙', snack: '🍎' };
+
+        body.innerHTML = plans.map((plan, idx) => {
+            const dateStr = new Date(plan.plan_date || plan.created_at).toLocaleDateString('en-US', {
+                year: 'numeric', month: 'long', day: 'numeric'
+            });
+            const mealsHtml = (plan.meals || []).map(m => `
+                <div class="plan-meal-row">
+                    <div class="plan-meal-type">
+                        ${mealTypeEmoji[m.meal_type.toLowerCase()] || '🍽️'} ${m.meal_type}
+                    </div>
+                    <div class="plan-meal-name">${m.recipe_name}</div>
+                    <div class="plan-meal-kcal">🔥 ${(m.calories || 0).toLocaleString()} kcal</div>
+                </div>`).join('');
+
+            return `
+                <div class="plan-card" id="plan-card-${plan.id}">
+                    <div class="plan-card-header">
+                        <div>
+                            <div class="plan-card-title">📅 Meal Plan #${plans.length - idx}</div>
+                            <div class="plan-card-meta">Created: ${dateStr}</div>
+                        </div>
+                        <div class="plan-card-total">🔥 ${(plan.total_calories || 0).toLocaleString()} kcal total</div>
+                    </div>
+                    <div class="plan-card-body">
+                        ${mealsHtml || '<p style="color:var(--clr-text-muted); font-size:14px;">No meal details saved.</p>'}
+                    </div>
+                    <div class="plan-card-footer">
+                        <button class="btn-delete-plan" onclick="deleteSavedPlan(${plan.id}, this)">
+                            🗑️ Delete
+                        </button>
+                    </div>
+                </div>`;
+        }).join('');
+
+    } catch (err) {
+        console.error('Load saved plans error:', err);
+        body.innerHTML = '<p style="color:var(--clr-danger); padding:16px 0;">Failed to load saved plans. Please try again.</p>';
+    }
+}
+
+async function deleteSavedPlan(planId, btn) {
+    if (!confirm('Are you sure you want to delete this meal plan?')) return;
+    btn.disabled = true;
+    btn.textContent = 'Deleting…';
+    try {
+        const res = await fetch(`${API_BASE_URL}/meal-plans/saved/${planId}`, {
+            method: 'DELETE',
+            credentials: 'include'
+        });
+        if (res.ok) {
+            // Remove card from DOM
+            document.getElementById(`plan-card-${planId}`).remove();
+            // Refresh stats count
+            loadStats();
+            // Show empty state if no plans left
+            const remaining = document.querySelectorAll('#plans-modal-body .plan-card');
+            if (remaining.length === 0) {
+                document.getElementById('plans-modal-body').innerHTML = `
+                    <div class="plans-empty">
+                        <div class="plans-empty-icon">📅</div>
+                        <h3>No saved meal plans yet</h3>
+                        <p>Generate a meal plan and click <strong>Save Meal Plan</strong> to save it here.</p>
+                        <a href="meal-planner.html" class="btn btn-primary" style="padding:10px 24px; font-size:14px;">
+                            📅 Plan My Meals
+                        </a>
+                    </div>`;
+            }
+        } else {
+            const d = await res.json().catch(() => ({}));
+            alert(d.error || 'Could not delete plan. Please try again.');
+            btn.disabled = false;
+            btn.textContent = '🗑️ Delete';
+        }
+    } catch (e) {
+        console.error(e);
+        alert('Network error. Could not delete plan.');
+        btn.disabled = false;
+        btn.textContent = '🗑️ Delete';
+    }
+}
+</script>
+</body>
+</html>

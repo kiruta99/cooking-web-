@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cuisines | CookWise</title>
+    <meta name="description" content="Explore recipes from world cuisines on CookWise. Click any cuisine to discover authentic dishes.">
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/recipe.css">
+    <style>
+        /* ── Cuisine grid ── */
+        .cuisine-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 20px;
+        }
+
+        /* ── Cuisine card — now a real anchor link ── */
+        a.cuisine-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: var(--clr-white);
+            border-radius: var(--radius-md);
+            padding: 28px 20px 24px;
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+            border: 1.5px solid var(--clr-border);
+            cursor: pointer;
+            text-decoration: none;
+            color: var(--clr-text-main);
+            transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+                        box-shadow 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+                        border-color 0.22s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        a.cuisine-card::after {
+            content: '→';
+            position: absolute;
+            bottom: 10px;
+            right: 14px;
+            font-size: 14px;
+            color: var(--clr-primary);
+            opacity: 0;
+            transform: translateX(-4px);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        a.cuisine-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 10px 28px rgba(11, 25, 44, 0.13);
+            border-color: var(--clr-primary);
+        }
+
+        a.cuisine-card:hover::after {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        a.cuisine-card:active {
+            transform: translateY(-2px) scale(0.99);
+        }
+
+        .cuisine-card-emoji {
+            font-size: 32px;
+            line-height: 1;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.12));
+        }
+
+        .cuisine-card h3 {
+            color: var(--clr-text-main);
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 600px) {
+            .cuisine-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 14px;
+            }
+            a.cuisine-card {
+                padding: 20px 12px 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="logo">Cook<span>Wise</span></a>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="recipes.html">Recipes</a>
+                <a href="cuisines.html" class="active">Cuisines</a>
+                <a href="meal-planner.html">Meal Planner</a>
+                <a href="nutrition.html">Nutrition</a>
+                <a href="login.html" class="btn btn-outline" id="nav-login-btn">Login</a>
+                <a href="register.html" class="btn btn-primary" id="nav-register-btn">Register</a>
+                <a href="dashboard.html" class="btn btn-primary" id="nav-dashboard-btn" style="display: none;">Dashboard</a>
+                <button class="btn btn-outline" id="nav-logout-btn" style="display: none;">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container" style="margin-top: 48px; margin-bottom: 80px;">
+        <div class="text-center mb-5">
+            <h1>Explore World Cuisines</h1>
+            <p style="color: var(--clr-text-muted); margin-top: 8px;">
+                Discover authentic recipes from around the globe. Click a cuisine to explore.
+            </p>
+        </div>
+
+        <div id="loading-state" class="text-center" style="padding: 40px 0; color: var(--clr-text-muted);">
+            Loading cuisines...
+        </div>
+        <div class="cuisine-grid" id="cuisine-grid"></div>
+    </main>
+
+    <script src="./js/app.js"></script>
+    <script>
+        // Emoji map (mirrors cuisine-detail.js)
+        const CUISINE_EMOJI = {
+            Afghan: '🇦🇫', Albanian: '🇦🇱', Algerian: '🇩🇿', Andorran: '🇦🇩',
+            Angolan: '🇦🇴', Argentine: '🇦🇷', Armenian: '🇦🇲', Australian: '🇦🇺',
+            Austrian: '🇦🇹', Azerbaijani: '🇦🇿', Bangladeshi: '🇧🇩', Belgian: '🇧🇪',
+            Bhutanese: '🇧🇹', Bolivian: '🇧🇴', Brazilian: '🇧🇷', British: '🇬🇧',
+            Bulgarian: '🇧🇬', Cambodian: '🇰🇭', Canadian: '🇨🇦', Chilean: '🇨🇱',
+            Chinese: '🇨🇳', Colombian: '🇨🇴', Croatian: '🇭🇷', Cuban: '🇨🇺',
+            Czech: '🇨🇿', Danish: '🇩🇰', Dutch: '🇳🇱', Egyptian: '🇪🇬',
+            Ethiopian: '🇪🇹', Filipino: '🇵🇭', Finnish: '🇫🇮', French: '🇫🇷',
+            Georgian: '🇬🇪', German: '🇩🇪', Greek: '🇬🇷', Guatemalan: '🇬🇹',
+            Hungarian: '🇭🇺', Indian: '🇮🇳', Indonesian: '🇮🇩', Iranian: '🇮🇷',
+            Iraqi: '🇮🇶', Irish: '🇮🇪', Israeli: '🇮🇱', Italian: '🇮🇹',
+            Jamaican: '🇯🇲', Japanese: '🇯🇵', Jordanian: '🇯🇴', Kazakh: '🇰🇿',
+            Kenyan: '🇰🇪', Korean: '🇰🇷', Kuwaiti: '🇰🇼', Laotian: '🇱🇦',
+            Lebanese: '🇱🇧', Libyan: '🇱🇾', Malaysian: '🇲🇾', Maltese: '🇲🇹',
+            Mexican: '🇲🇽', Mongolian: '🇲🇳', Moroccan: '🇲🇦', Mozambican: '🇲🇿',
+            Myanmar: '🇲🇲', Nepalese: '🇳🇵', Nigerian: '🇳🇬', Norwegian: '🇳🇴',
+            Pakistani: '🇵🇰', Peruvian: '🇵🇪', Polish: '🇵🇱', Portuguese: '🇵🇹',
+            Romanian: '🇷🇴', Russian: '🇷🇺', Saudi: '🇸🇦', Serbian: '🇷🇸',
+            Singaporean: '🇸🇬', Slovak: '🇸🇰', Somali: '🇸🇴', South_African: '🇿🇦',
+            Spanish: '🇪🇸', Sri_Lankan: '🇱🇰', Sudanese: '🇸🇩', Swedish: '🇸🇪',
+            Swiss: '🇨🇭', Syrian: '🇸🇾', Taiwanese: '🇹🇼', Thai: '🇹🇭',
+            Tunisian: '🇹🇳', Turkish: '🇹🇷', Ugandan: '🇺🇬', Ukrainian: '🇺🇦',
+            Uruguayan: '🇺🇾', Venezuelan: '🇻🇪', Vietnamese: '🇻🇳', Yemeni: '🇾🇪',
+            Zimbabwean: '🇿🇼',
+            Unknown: '🌍',
+        };
+
+        function getCuisineEmoji(area) {
+            return CUISINE_EMOJI[area] || CUISINE_EMOJI['Unknown'];
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const grid = document.getElementById('cuisine-grid');
+            const loader = document.getElementById('loading-state');
+
+            try {
+                const res = await fetch(`${MEALDB_BASE_URL}/list.php?a=list`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+                const data = await res.json();
+                if (data.meals && data.meals.length > 0) {
+                    loader.style.display = 'none';
+
+                    grid.innerHTML = data.meals.map(c => {
+                        const emoji = getCuisineEmoji(c.strArea);
+                        const encodedArea = encodeURIComponent(c.strArea);
+                        return `
+                            <a class="cuisine-card" href="cuisine-detail.html?area=${encodedArea}" title="View ${c.strArea} recipes">
+                                <span class="cuisine-card-emoji">${emoji}</span>
+                                <h3>${c.strArea}</h3>
+                            </a>
+                        `;
+                    }).join('');
+                } else {
+                    loader.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🍽️</div><h3>No cuisines available</h3><p>Please try again later.</p></div>';
+                }
+            } catch (e) {
+                console.error('Failed to load cuisines:', e);
+                loader.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div><h3>Unable to load cuisines</h3><p>Check your connection and refresh the page.</p></div>';
+            }
+        });
+    </script>
+</body>
+</html>
+

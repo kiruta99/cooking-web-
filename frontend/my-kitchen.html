@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Kitchen | CookWise</title>
+    <meta name="description" content="Manage your pantry ingredients in CookWise — add, edit, and track what you have at home.">
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/recipe.css">
+    <style>
+        body { background: #F1F5F9; }
+
+        .page-header { padding: 40px 0 32px; }
+        .page-header h1 { font-size: 36px; margin-bottom: 8px; }
+        .page-header p  { color: var(--clr-text-muted); font-size: 16px; }
+
+        .kitchen-layout {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 32px;
+            margin-bottom: 80px;
+            align-items: start;
+        }
+
+        /* Add item form */
+        .add-form-card {
+            background: var(--clr-white);
+            border-radius: var(--radius-md);
+            padding: 28px;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 90px;
+        }
+
+        .add-form-card h2 { font-size: 18px; margin-bottom: 20px; }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        /* Pantry list */
+        .pantry-card {
+            background: var(--clr-white);
+            border-radius: var(--radius-md);
+            padding: 28px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .pantry-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+        }
+
+        .pantry-header h2 { font-size: 18px; }
+
+        .pantry-search {
+            padding: 10px 16px;
+            border: 1px solid var(--clr-border);
+            border-radius: var(--radius-full);
+            font-family: var(--font-body);
+            font-size: 14px;
+            width: 220px;
+        }
+
+        .pantry-search:focus { outline: none; border-color: var(--clr-primary); }
+
+        /* Item rows */
+        .pantry-item {
+            display: flex; align-items: center; gap: 14px;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--clr-border);
+            animation: fadeInUp 0.3s ease;
+        }
+
+        .pantry-item:last-child { border-bottom: none; }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .item-icon {
+            width: 44px; height: 44px;
+            border-radius: var(--radius-sm);
+            background: #F0FDF4;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; flex-shrink: 0;
+        }
+
+        .item-info { flex: 1; }
+        .item-name { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+        .item-meta { font-size: 13px; color: var(--clr-text-muted); display: flex; gap: 12px; flex-wrap: wrap; }
+
+        .item-tag {
+            background: #EFF6FF;
+            color: #1D4ED8;
+            padding: 2px 8px;
+            border-radius: var(--radius-full);
+            font-size: 11px; font-weight: 600;
+        }
+
+        .expiry-warn { color: #DC2626; font-weight: 600; }
+
+        .item-actions { display: flex; gap: 8px; }
+
+        .btn-icon {
+            width: 34px; height: 34px;
+            border: 1px solid var(--clr-border);
+            background: var(--clr-white);
+            border-radius: var(--radius-sm);
+            cursor: pointer; font-size: 15px;
+            display: flex; align-items: center; justify-content: center;
+            transition: var(--transition-fast);
+        }
+
+        .btn-icon:hover { border-color: var(--clr-primary); background: #F0FDF4; }
+        .btn-icon.danger:hover { border-color: var(--clr-danger); background: #FEF2F2; }
+
+        /* Edit modal */
+        .modal-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5);
+            display: none; z-index: 1000;
+            align-items: center; justify-content: center;
+        }
+
+        .modal-overlay.open { display: flex; }
+
+        .modal {
+            background: var(--clr-white);
+            border-radius: var(--radius-lg);
+            padding: 32px;
+            width: min(500px, 95vw);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal h3 { margin-bottom: 20px; font-size: 20px; }
+
+        /* Category icons */
+        .cat-icon {
+            produce: '🥦', dairy: '🧀', meat: '🥩', grain: '🌾',
+            frozen: '🧊', canned: '🥫', condiment: '🫙', spice: '🌶️',
+            beverage: '🥤', snack: '🍿', other: '🏠'
+        }
+
+        @media (max-width: 900px) {
+            .kitchen-layout { grid-template-columns: 1fr; }
+            .add-form-card  { position: static; }
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar">
+    <div class="container">
+        <a href="index.html" class="logo">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 12h20"/><path d="M20 12v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8"/>
+                <path d="M4 12V8a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v4"/>
+            </svg>
+            Cook<span>Wise</span>
+        </a>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="recipes.html">Recipes</a>
+            <a href="dashboard.html" class="btn btn-outline">Dashboard</a>
+            <button class="btn btn-primary" id="nav-logout-btn">Logout</button>
+        </div>
+    </div>
+</nav>
+
+<main class="container">
+    <div class="page-header">
+        <h1>🥬 My Kitchen</h1>
+        <p>Track what's in your pantry and find recipes you can make right now.</p>
+    </div>
+
+    <div class="kitchen-layout">
+
+        <!-- Add / Edit form -->
+        <div class="add-form-card">
+            <h2 id="form-title">Add Ingredient</h2>
+            <form id="pantry-form">
+                <input type="hidden" id="edit-id">
+
+                <div class="input-group">
+                    <label for="ing-name">Ingredient Name *</label>
+                    <input type="text" id="ing-name" class="input-control"
+                           placeholder="e.g. Chicken Breast" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="input-group">
+                        <label for="ing-qty">Quantity</label>
+                        <input type="number" id="ing-qty" class="input-control"
+                               placeholder="e.g. 500" min="0" step="0.1">
+                    </div>
+                    <div class="input-group">
+                        <label for="ing-unit">Unit</label>
+                        <select id="ing-unit" class="input-control">
+                            <option value="">None</option>
+                            <option value="g">g</option>
+                            <option value="kg">kg</option>
+                            <option value="ml">ml</option>
+                            <option value="L">L</option>
+                            <option value="pcs">pcs</option>
+                            <option value="cup">cup</option>
+                            <option value="tbsp">tbsp</option>
+                            <option value="tsp">tsp</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="ing-category">Category</label>
+                    <select id="ing-category" class="input-control">
+                        <option value="">Select category</option>
+                        <option value="produce">🥦 Produce</option>
+                        <option value="dairy">🧀 Dairy</option>
+                        <option value="meat">🥩 Meat & Seafood</option>
+                        <option value="grain">🌾 Grains & Bread</option>
+                        <option value="frozen">🧊 Frozen</option>
+                        <option value="canned">🥫 Canned & Jarred</option>
+                        <option value="condiment">🫙 Condiments & Sauces</option>
+                        <option value="spice">🌶️ Spices & Herbs</option>
+                        <option value="beverage">🥤 Beverages</option>
+                        <option value="snack">🍿 Snacks</option>
+                        <option value="other">📦 Other</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="ing-expiry">Expiration Date</label>
+                    <input type="date" id="ing-expiry" class="input-control">
+                </div>
+
+                <div style="display:flex; gap:12px; margin-top:8px;">
+                    <button type="submit" class="btn btn-primary" style="flex:1;" id="form-submit-btn">
+                        ➕ Add to Pantry
+                    </button>
+                    <button type="button" class="btn btn-outline" id="form-cancel-btn"
+                            style="display:none;" onclick="cancelEdit()">Cancel</button>
+                </div>
+            </form>
+
+            <div style="margin-top:20px; padding-top:20px; border-top:1px solid var(--clr-border);">
+                <p style="font-size:13px; color:var(--clr-text-muted); margin-bottom:12px;">
+                    💡 Find recipes with what you have:
+                </p>
+                <button class="btn btn-outline" style="width:100%; font-size:14px;"
+                        onclick="searchWithPantry()">
+                    🔍 Match Recipes to My Pantry
+                </button>
+            </div>
+        </div>
+
+        <!-- Pantry list -->
+        <div class="pantry-card">
+            <div class="pantry-header">
+                <h2>My Pantry <span id="pantry-count" style="color:var(--clr-text-muted); font-weight:400; font-size:16px;"></span></h2>
+                <input type="text" class="pantry-search" id="pantry-search"
+                       placeholder="🔍 Search ingredients…" oninput="filterPantry(this.value)">
+            </div>
+
+            <div id="pantry-list">
+                <!-- Skeleton -->
+                <div class="pantry-item">
+                    <div class="skeleton item-icon"></div>
+                    <div class="item-info">
+                        <div class="skeleton skeleton-text" style="width:60%;"></div>
+                        <div class="skeleton skeleton-text short" style="width:40%; margin-top:6px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Edit modal -->
+<div class="modal-overlay" id="edit-modal">
+    <div class="modal">
+        <h3>Edit Ingredient</h3>
+        <form id="edit-form">
+            <input type="hidden" id="modal-id">
+            <div class="input-group">
+                <label>Name *</label>
+                <input type="text" id="modal-name" class="input-control" required>
+            </div>
+            <div class="form-row">
+                <div class="input-group">
+                    <label>Quantity</label>
+                    <input type="number" id="modal-qty" class="input-control" min="0" step="0.1">
+                </div>
+                <div class="input-group">
+                    <label>Unit</label>
+                    <select id="modal-unit" class="input-control">
+                        <option value="">None</option>
+                        <option value="g">g</option><option value="kg">kg</option>
+                        <option value="ml">ml</option><option value="L">L</option>
+                        <option value="pcs">pcs</option><option value="cup">cup</option>
+                        <option value="tbsp">tbsp</option><option value="tsp">tsp</option>
+                    </select>
+                </div>
+            </div>
+            <div class="input-group">
+                <label>Category</label>
+                <select id="modal-category" class="input-control">
+                    <option value="">Select</option>
+                    <option value="produce">🥦 Produce</option>
+                    <option value="dairy">🧀 Dairy</option>
+                    <option value="meat">🥩 Meat & Seafood</option>
+                    <option value="grain">🌾 Grains & Bread</option>
+                    <option value="frozen">🧊 Frozen</option>
+                    <option value="canned">🥫 Canned & Jarred</option>
+                    <option value="condiment">🫙 Condiments</option>
+                    <option value="spice">🌶️ Spices</option>
+                    <option value="beverage">🥤 Beverages</option>
+                    <option value="snack">🍿 Snacks</option>
+                    <option value="other">📦 Other</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Expiration Date</label>
+                <input type="date" id="modal-expiry" class="input-control">
+            </div>
+            <div style="display:flex; gap:12px; margin-top:16px;">
+                <button type="submit" class="btn btn-primary" style="flex:1;">💾 Save Changes</button>
+                <button type="button" class="btn btn-outline" onclick="closeModal()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="./js/app.js"></script>
+<script>
+/* ── State ──────────────────────────────────────────── */
+let allItems = [];
+
+const CAT_ICONS = {
+    produce:'🥦', dairy:'🧀', meat:'🥩', grain:'🌾',
+    frozen:'🧊', canned:'🥫', condiment:'🫙', spice:'🌶️',
+    beverage:'🥤', snack:'🍿', other:'📦', '':''
+};
+
+/* ── Guard ──────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', async () => {
+    const user = await window.authPromise;
+    if (!user) { window.location.href = 'login.html'; return; }
+    loadPantry();
+});
+
+/* ── Load ───────────────────────────────────────────── */
+async function loadPantry() {
+    try {
+        const res = await fetch(`${API_BASE_URL}/pantry`);
+        if (!res.ok) throw new Error('API error');
+        const data = await res.json();
+        allItems = data.items || [];
+        renderPantry(allItems);
+    } catch (e) {
+        document.getElementById('pantry-list').innerHTML =
+            '<p style="color:var(--clr-danger); padding:16px 0;">Unable to load pantry. Please refresh.</p>';
+    }
+}
+
+function renderPantry(items) {
+    const list = document.getElementById('pantry-list');
+    const count = document.getElementById('pantry-count');
+    count.textContent = `(${items.length} item${items.length !== 1 ? 's' : ''})`;
+
+    if (items.length === 0) {
+        list.innerHTML = `
+            <div style="text-align:center; padding:48px 0;">
+                <div style="font-size:48px; margin-bottom:16px; opacity:0.4;">🥬</div>
+                <p style="color:var(--clr-text-muted);">Your pantry is empty. Add your first ingredient!</p>
+            </div>`;
+        return;
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+
+    list.innerHTML = items.map(item => {
+        const icon = CAT_ICONS[item.category] || '📦';
+        const qty  = item.quantity ? `${item.quantity}${item.unit ? ' ' + item.unit : ''}` : '';
+        const cat  = item.category ? `<span class="item-tag">${icon} ${item.category}</span>` : '';
+        const expClass = item.expiration_date && item.expiration_date < today ? 'expiry-warn' : '';
+        const exp  = item.expiration_date
+            ? `<span class="${expClass}">Exp: ${item.expiration_date}${expClass ? ' ⚠️' : ''}</span>`
+            : '';
+
+        return `
+        <div class="pantry-item" data-id="${item.id}">
+            <div class="item-icon">${icon || '🧂'}</div>
+            <div class="item-info">
+                <div class="item-name">${item.ingredient_name}</div>
+                <div class="item-meta">
+                    ${qty ? `<span>${qty}</span>` : ''}
+                    ${cat}
+                    ${exp}
+                </div>
+            </div>
+            <div class="item-actions">
+                <button class="btn-icon" title="Edit" onclick="openEdit(${JSON.stringify(item).replace(/"/g, '&quot;')})">✏️</button>
+                <button class="btn-icon danger" title="Delete" onclick="deleteItem(${item.id}, this)">🗑️</button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+/* ── Add ────────────────────────────────────────────── */
+document.getElementById('pantry-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const editId = document.getElementById('edit-id').value;
+    const payload = {
+        ingredient_name: document.getElementById('ing-name').value.trim(),
+        quantity:        document.getElementById('ing-qty').value || null,
+        unit:            document.getElementById('ing-unit').value || null,
+        category:        document.getElementById('ing-category').value || null,
+        expiration_date: document.getElementById('ing-expiry').value || null
+    };
+
+    if (!payload.ingredient_name) return;
+
+    const btn = document.getElementById('form-submit-btn');
+    btn.disabled = true; btn.textContent = 'Saving…';
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/pantry${editId ? '/' + editId : ''}`, {
+            method:  editId ? 'PUT' : 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify(payload)
+        });
+        if (res.ok) {
+            document.getElementById('pantry-form').reset();
+            document.getElementById('edit-id').value = '';
+            document.getElementById('form-title').textContent = 'Add Ingredient';
+            document.getElementById('form-submit-btn').textContent = '➕ Add to Pantry';
+            document.getElementById('form-cancel-btn').style.display = 'none';
+            loadPantry();
+        } else {
+            alert('Could not save ingredient.');
+        }
+    } catch (err) { alert('Network error.'); }
+    finally { btn.disabled = false; }
+});
+
+/* ── Edit modal ─────────────────────────────────────── */
+function openEdit(item) {
+    document.getElementById('modal-id').value       = item.id;
+    document.getElementById('modal-name').value     = item.ingredient_name;
+    document.getElementById('modal-qty').value      = item.quantity || '';
+    document.getElementById('modal-unit').value     = item.unit || '';
+    document.getElementById('modal-category').value = item.category || '';
+    document.getElementById('modal-expiry').value   = item.expiration_date || '';
+    document.getElementById('edit-modal').classList.add('open');
+}
+
+function closeModal() {
+    document.getElementById('edit-modal').classList.remove('open');
+}
+
+document.getElementById('edit-modal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('edit-modal')) closeModal();
+});
+
+document.getElementById('edit-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('modal-id').value;
+    const payload = {
+        ingredient_name: document.getElementById('modal-name').value.trim(),
+        quantity:        document.getElementById('modal-qty').value || null,
+        unit:            document.getElementById('modal-unit').value || null,
+        category:        document.getElementById('modal-category').value || null,
+        expiration_date: document.getElementById('modal-expiry').value || null
+    };
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/pantry/${id}`, {
+            method:  'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify(payload)
+        });
+        if (res.ok) { closeModal(); loadPantry(); }
+        else alert('Could not update ingredient.');
+    } catch (err) { alert('Network error.'); }
+});
+
+function cancelEdit() {
+    document.getElementById('edit-id').value = '';
+    document.getElementById('form-title').textContent = 'Add Ingredient';
+    document.getElementById('form-submit-btn').textContent = '➕ Add to Pantry';
+    document.getElementById('form-cancel-btn').style.display = 'none';
+    document.getElementById('pantry-form').reset();
+}
+
+/* ── Delete ─────────────────────────────────────────── */
+async function deleteItem(id, btn) {
+    if (!confirm('Remove this item from your pantry?')) return;
+    try {
+        const res = await fetch(`${API_BASE_URL}/pantry/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+            btn.closest('.pantry-item').remove();
+            allItems = allItems.filter(i => i.id !== id);
+            document.getElementById('pantry-count').textContent =
+                `(${allItems.length} item${allItems.length !== 1 ? 's' : ''})`;
+        }
+    } catch (e) { alert('Network error.'); }
+}
+
+/* ── Search ─────────────────────────────────────────── */
+function filterPantry(query) {
+    const filtered = allItems.filter(i =>
+        i.ingredient_name.toLowerCase().includes(query.toLowerCase())
+    );
+    renderPantry(filtered);
+}
+
+/* ── Match recipes ───────────────────────────────────── */
+function searchWithPantry() {
+    const names = allItems.map(i => i.ingredient_name).join(',');
+    if (!names) { alert('Add some ingredients to your pantry first!'); return; }
+    window.location.href = `recipes.html?search=${encodeURIComponent(names)}`;
+}
+</script>
+</body>
+</html>

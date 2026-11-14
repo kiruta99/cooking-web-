@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calorie Calculator | CookWise</title>
+    <meta name="description" content="Estimate your daily calorie needs with CookWise's personal Calorie Calculator, powered by the Mifflin-St Jeor equation.">
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/recipe.css">
+    <style>
+        /* ── Page Layout ─────────────────────────── */
+        .calc-page {
+            padding: 48px 0 96px;
+        }
+
+        .calc-page .page-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .calc-page .page-header h1 {
+            font-size: 48px;
+            color: var(--clr-text-main);
+            margin-bottom: 12px;
+        }
+
+        .calc-page .page-header p {
+            font-size: 18px;
+            color: var(--clr-text-muted);
+            max-width: 540px;
+            margin: 0 auto;
+        }
+
+        /* ── Two-column layout ───────────────────── */
+        .calc-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: start;
+        }
+
+        /* ── Form Card ───────────────────────────── */
+        .calc-form-card {
+            background: var(--clr-white);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            padding: 40px;
+        }
+
+        .calc-form-card h2 {
+            font-size: 22px;
+            margin-bottom: 28px;
+            color: var(--clr-text-main);
+        }
+
+        /* Gender toggle */
+        .gender-toggle {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 0;
+        }
+
+        .gender-btn {
+            flex: 1;
+            padding: 14px;
+            border: 2px solid var(--clr-border);
+            border-radius: var(--radius-sm);
+            background: var(--clr-bg);
+            font-family: var(--font-heading);
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--clr-text-muted);
+            cursor: pointer;
+            transition: var(--transition-fast);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .gender-btn:hover {
+            border-color: var(--clr-primary);
+            color: var(--clr-primary);
+        }
+
+        .gender-btn.selected {
+            border-color: var(--clr-primary);
+            background: var(--clr-primary);
+            color: var(--clr-white);
+        }
+
+        /* Activity select */
+        .input-control.select-styled {
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%234A5568' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            padding-right: 40px;
+            cursor: pointer;
+        }
+
+        /* Validation error */
+        .field-error {
+            color: var(--clr-danger);
+            font-size: 13px;
+            margin-top: 4px;
+            display: none;
+        }
+
+        .field-error.visible {
+            display: block;
+        }
+
+        .input-control.invalid {
+            border-color: var(--clr-danger);
+            box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.15);
+        }
+
+        /* ── Result Card ──────────────────────────── */
+        .result-card {
+            background: var(--clr-white);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+            position: sticky;
+            top: 100px;
+        }
+
+        .result-header {
+            background: linear-gradient(135deg, var(--clr-primary-dark) 0%, var(--clr-primary) 100%);
+            padding: 32px;
+            text-align: center;
+            color: var(--clr-white);
+        }
+
+        .result-header h3 {
+            font-size: 13px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            opacity: 0.8;
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+
+        .result-main-number {
+            font-size: 68px;
+            font-weight: 800;
+            font-family: var(--font-heading);
+            line-height: 1;
+            margin-bottom: 8px;
+            color: var(--clr-highlight);
+        }
+
+        .result-main-label {
+            font-size: 15px;
+            opacity: 0.85;
+        }
+
+        .result-body {
+            padding: 32px;
+        }
+
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 18px 0;
+            border-bottom: 1px solid var(--clr-border);
+        }
+
+        .result-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .result-label-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .result-label-title {
+            font-weight: 700;
+            font-family: var(--font-heading);
+            font-size: 15px;
+            color: var(--clr-text-main);
+        }
+
+        .result-label-desc {
+            font-size: 12px;
+            color: var(--clr-text-muted);
+            max-width: 220px;
+            line-height: 1.4;
+        }
+
+        .result-value {
+            font-weight: 700;
+            font-family: var(--font-heading);
+            font-size: 18px;
+            color: var(--clr-primary-dark);
+            white-space: nowrap;
+        }
+
+        /* ── Empty State (before calc) ───────────── */
+        .result-placeholder {
+            padding: 48px 32px;
+            text-align: center;
+        }
+
+        .result-placeholder .placeholder-icon {
+            font-size: 56px;
+            margin-bottom: 20px;
+            display: block;
+            opacity: 0.6;
+        }
+
+        .result-placeholder p {
+            color: var(--clr-text-muted);
+            font-size: 15px;
+        }
+
+        /* ── Save Banner ─────────────────────────── */
+        .save-banner {
+            background: #F0FDF4;
+            border: 1px solid #86EFAC;
+            border-radius: var(--radius-md);
+            padding: 16px 20px;
+            margin: 20px 32px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .save-banner p {
+            font-size: 14px;
+            color: var(--clr-primary-dark);
+        }
+
+        /* ── Disclaimer ──────────────────────────── */
+        .disclaimer {
+            margin-top: 32px;
+            padding: 16px 20px;
+            background: #FFFBEB;
+            border-left: 4px solid var(--clr-highlight);
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            font-size: 13px;
+            color: #78350F;
+            line-height: 1.6;
+        }
+
+        /* ── Saved badge ─────────────────────────── */
+        .saved-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #D1FAE5;
+            color: var(--clr-primary-dark);
+            padding: 6px 14px;
+            border-radius: var(--radius-full);
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        /* ── Responsive ──────────────────────────── */
+        @media (max-width: 900px) {
+            .calc-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .result-card {
+                position: static;
+            }
+
+            .calc-page .page-header h1 {
+                font-size: 36px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .calc-form-card {
+                padding: 24px 20px;
+            }
+
+            .result-main-number {
+                font-size: 52px;
+            }
+
+            .result-body {
+                padding: 24px 20px;
+            }
+
+            .save-banner {
+                margin: 16px 20px 24px;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- ══ Navbar ══════════════════════════════════ -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M2 12h20" />
+                    <path d="M20 12v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8" />
+                    <path d="M4 12V8a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v4" />
+                </svg>
+                Cook<span>Wise</span>
+            </a>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="recipes.html">Recipes</a>
+                <a href="cuisines.html">Cuisines</a>
+                <a href="meal-planner.html">Meal Planner</a>
+                <a href="nutrition.html" class="active">Nutrition</a>
+                <a href="login.html" class="btn btn-outline" id="nav-login-btn">Login</a>
+                <a href="register.html" class="btn btn-primary" id="nav-register-btn">Register</a>
+                <a href="dashboard.html" class="btn btn-primary" id="nav-dashboard-btn" style="display:none;">Dashboard</a>
+                <button class="btn btn-outline" id="nav-logout-btn" style="display:none;">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ══ Main ════════════════════════════════════ -->
+    <main class="calc-page">
+        <div class="container">
+
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1>🔥 Calorie Calculator</h1>
+                <p>Estimate your daily calorie needs based on your body and activity level.</p>
+            </div>
+
+            <div class="calc-layout">
+
+                <!-- ── LEFT: Input Form ─────────────── -->
+                <div class="calc-form-card">
+                    <h2>Your Information</h2>
+
+                    <form id="calc-form" novalidate>
+
+                        <!-- Gender -->
+                        <div class="input-group">
+                            <label>Gender</label>
+                            <div class="gender-toggle">
+                                <button type="button" class="gender-btn" id="btn-male" data-gender="male"
+                                    onclick="selectGender('male')">
+                                    ♂ Male
+                                </button>
+                                <button type="button" class="gender-btn" id="btn-female" data-gender="female"
+                                    onclick="selectGender('female')">
+                                    ♀ Female
+                                </button>
+                            </div>
+                            <span class="field-error" id="err-gender">Please select your gender.</span>
+                        </div>
+
+                        <!-- Age -->
+                        <div class="input-group">
+                            <label for="field-age">Age <span style="color:var(--clr-text-muted);font-weight:400;">(years)</span></label>
+                            <input type="number" id="field-age" class="input-control" placeholder="e.g. 30" min="1" max="120">
+                            <span class="field-error" id="err-age">Please enter a valid age (1–120).</span>
+                        </div>
+
+                        <!-- Weight -->
+                        <div class="input-group">
+                            <label for="field-weight">Weight <span style="color:var(--clr-text-muted);font-weight:400;">(kg)</span></label>
+                            <input type="number" id="field-weight" class="input-control" placeholder="e.g. 70" min="1" step="0.1">
+                            <span class="field-error" id="err-weight">Please enter a valid weight greater than 0.</span>
+                        </div>
+
+                        <!-- Height -->
+                        <div class="input-group">
+                            <label for="field-height">Height <span style="color:var(--clr-text-muted);font-weight:400;">(cm)</span></label>
+                            <input type="number" id="field-height" class="input-control" placeholder="e.g. 175" min="1" step="0.1">
+                            <span class="field-error" id="err-height">Please enter a valid height greater than 0.</span>
+                        </div>
+
+                        <!-- Activity Level -->
+                        <div class="input-group">
+                            <label for="field-activity">Activity Level</label>
+                            <select id="field-activity" class="input-control select-styled">
+                                <option value="">— Select your activity level —</option>
+                                <option value="sedentary">Sedentary (little or no exercise)</option>
+                                <option value="light">Lightly Active (light exercise 1–3 days/week)</option>
+                                <option value="moderate">Moderately Active (moderate exercise 3–5 days/week)</option>
+                                <option value="active">Very Active (hard exercise 6–7 days/week)</option>
+                                <option value="very_active">Extra Active (very hard exercise & physical job)</option>
+                            </select>
+                            <span class="field-error" id="err-activity">Please select an activity level.</span>
+                        </div>
+
+                        <!-- Submit -->
+                        <button type="submit" class="btn btn-accent" style="width:100%; margin-top:8px; font-size:17px; padding:16px;">
+                            🔥 Calculate My Calories
+                        </button>
+                    </form>
+
+                    <!-- Disclaimer -->
+                    <div class="disclaimer">
+                        ⚠️ These calorie values are <strong>estimates</strong> and are not medical advice. Individual energy needs vary based on many factors. Consult a healthcare professional for personalised dietary guidance.
+                    </div>
+                </div>
+
+                <!-- ── RIGHT: Results ───────────────── -->
+                <div class="result-card" id="result-card">
+
+                    <!-- Placeholder shown before first calculation -->
+                    <div class="result-placeholder" id="result-placeholder">
+                        <span class="placeholder-icon">🥗</span>
+                        <p>Fill in your details and press <strong>Calculate My Calories</strong> to see your personalised estimate.</p>
+                    </div>
+
+                    <!-- Actual results (hidden until calculated) -->
+                    <div id="result-content" style="display:none;">
+
+                        <div class="result-header">
+                            <h3>Your Estimated Daily Calories</h3>
+                            <div class="result-main-number" id="res-tdee">—</div>
+                            <div class="result-main-label">kcal / day &nbsp;·&nbsp; Estimated Maintenance Calories</div>
+                        </div>
+
+                        <div class="result-body">
+
+                            <div class="result-row">
+                                <div class="result-label-group">
+                                    <div class="result-label-title">BMR</div>
+                                    <div class="result-label-desc">Estimated calories your body uses at complete rest to support essential body functions.</div>
+                                </div>
+                                <div class="result-value" id="res-bmr">—</div>
+                            </div>
+
+                            <div class="result-row">
+                                <div class="result-label-group">
+                                    <div class="result-label-title">Activity Level</div>
+                                    <div class="result-label-desc">Your selected exercise intensity multiplier.</div>
+                                </div>
+                                <div class="result-value" id="res-activity-label">—</div>
+                            </div>
+
+                            <div class="result-row">
+                                <div class="result-label-group">
+                                    <div class="result-label-title">TDEE</div>
+                                    <div class="result-label-desc">Estimated daily maintenance calories based on your activity level. BMR × activity multiplier.</div>
+                                </div>
+                                <div class="result-value" id="res-tdee-2">—</div>
+                            </div>
+
+                            <div class="result-row" style="border:none; padding-top:20px; background:#F0FDF4; border-radius:var(--radius-sm); padding:16px; margin-top:8px;">
+                                <div class="result-label-group">
+                                    <div class="result-label-title" style="color:var(--clr-primary-dark);">Estimated Maintenance</div>
+                                    <div class="result-label-desc">Your estimated daily energy need to maintain your current weight.</div>
+                                </div>
+                                <div class="result-value" style="color:var(--clr-primary);" id="res-maintenance">—</div>
+                            </div>
+
+                        </div>
+
+                        <!-- Save banner -->
+                        <div class="save-banner" id="save-banner">
+                            <p id="save-banner-text">Log in to save your calorie profile to your CookWise account.</p>
+                            <button class="btn btn-primary" id="btn-save-result" style="white-space:nowrap; padding:10px 20px; font-size:14px;">
+                                💾 Save Result
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+                <!-- /result-card -->
+
+            </div>
+            <!-- /calc-layout -->
+        </div>
+    </main>
+
+    <!-- ══ Footer ══════════════════════════════════ -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-col">
+                    <div class="footer-logo">Cook<span>Wise</span></div>
+                    <p style="color:#A0AEC0;max-width:250px;">Cook Smarter. Waste Less. Eat Better.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Explore</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="recipes.html">Recipes</a></li>
+                        <li><a href="cuisines.html">Cuisines</a></li>
+                        <li><a href="meal-planner.html">Meal Planner</a></li>
+                        <li><a href="nutrition.html">Nutrition</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Tools</h4>
+                    <ul>
+                        <li><a href="kitchen.html">My Kitchen</a></li>
+                        <li><a href="shopping-list.html">Shopping List</a></li>
+                        <li><a href="ai-assistant.html">AI Chef</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Company</h4>
+                    <ul>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="#">Contact</a></li>
+                        <li><a href="#">Privacy</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">&copy; 2026 CookWise. All rights reserved.</div>
+        </div>
+    </footer>
+
+    <script src="./js/app.js"></script>
+    <script src="./js/nutrition.js"></script>
+</body>
+</html>

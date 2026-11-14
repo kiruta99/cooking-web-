@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Details | CookWise</title>
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/recipe.css">
+    <style>
+        /* ============================================
+           RECIPE DETAILS PAGE STYLES
+        ============================================ */
+        .details-header { margin-top: 40px; margin-bottom: 24px; }
+        .details-hero { position: relative; border-radius: var(--radius-lg); overflow: hidden; height: 400px; margin-bottom: 40px; }
+        .details-hero img { width: 100%; height: 100%; object-fit: cover; }
+        .details-hero-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(11,25,44,0.8), transparent); display: flex; flex-direction: column; justify-content: flex-end; padding: 40px; color: var(--clr-white); }
+        .details-hero-overlay h1 { font-size: 48px; margin-bottom: 12px; }
+        .details-meta-tags { display: flex; gap: 12px; margin-bottom: 24px; }
+        .badge { background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: var(--radius-full); backdrop-filter: blur(4px); font-weight: 600; font-size: 14px; }
+
+        .layout-grid { display: grid; grid-template-columns: 1fr 350px; gap: 40px; }
+
+        .panel { background: var(--clr-white); padding: 32px; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); margin-bottom: 32px; }
+        .panel h3 { margin-bottom: 24px; border-bottom: 1px solid var(--clr-border); padding-bottom: 12px; }
+
+        .ingredients-list { list-style: none; margin-bottom: 24px; }
+        .ingredients-list li { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--clr-border); }
+        .ingredients-list li:last-child { border-bottom: none; }
+
+        .servings-control { display: inline-flex; align-items: center; gap: 12px; background: var(--clr-bg); padding: 8px 16px; border-radius: var(--radius-full); margin-bottom: 24px; }
+        .servings-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--clr-primary); }
+        .servings-num { font-weight: 600; font-size: 18px; width: 30px; text-align: center; }
+
+        .instructions p { margin-bottom: 16px; line-height: 1.8; color: var(--clr-text-muted); }
+
+        .action-bar { display: flex; gap: 16px; margin-bottom: 32px; flex-wrap: wrap; }
+
+        /* ============================================
+           COOKING MODE — FULL REDESIGN
+        ============================================ */
+
+        /* Overlay base */
+        .cooking-mode-overlay {
+            position: fixed;
+            inset: 0;
+            background: #0f1923;
+            z-index: 2000;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            font-family: var(--font-body);
+        }
+
+        /* ---- Header ---- */
+        .ck-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 28px;
+            background: rgba(255,255,255,0.04);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            flex-shrink: 0;
+            gap: 12px;
+        }
+        .ck-header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .ck-logo-mark {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--clr-primary), var(--clr-accent));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .ck-header-titles h2 {
+            font-family: var(--font-heading);
+            font-size: 17px;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1.2;
+        }
+        .ck-recipe-name {
+            font-size: 13px;
+            color: rgba(255,255,255,0.5);
+            font-weight: 400;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 300px;
+        }
+        .ck-exit-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 9px 18px;
+            border-radius: var(--radius-full);
+            border: 1.5px solid rgba(255,255,255,0.2);
+            background: transparent;
+            color: rgba(255,255,255,0.7);
+            font-family: var(--font-heading);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .ck-exit-btn:hover {
+            border-color: rgba(255,255,255,0.5);
+            color: #fff;
+            background: rgba(255,255,255,0.06);
+        }
+        .ck-exit-btn:focus-visible {
+            outline: 2px solid var(--clr-accent);
+            outline-offset: 2px;
+        }
+
+        /* ---- Progress Bar ---- */
+        .ck-progress-bar {
+            padding: 12px 28px 10px;
+            background: rgba(255,255,255,0.03);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            flex-shrink: 0;
+        }
+        .ck-progress-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .ck-step-label {
+            font-family: var(--font-heading);
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--clr-accent);
+        }
+        .ck-progress-pct {
+            font-size: 13px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.5);
+        }
+        .ck-progress-track {
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+        .ck-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--clr-primary), var(--clr-accent));
+            border-radius: 999px;
+            transition: width 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .ck-step-dots {
+            display: flex;
+            gap: 6px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        .ck-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.15);
+            transition: background 0.3s ease, transform 0.3s ease;
+            flex-shrink: 0;
+        }
+        .ck-dot.done { background: var(--clr-success); }
+        .ck-dot.active { background: var(--clr-accent); transform: scale(1.4); }
+
+        /* ---- Scrollable Body ---- */
+        .ck-body {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 24px 28px 120px;
+            gap: 20px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.15) transparent;
+        }
+        .ck-body::-webkit-scrollbar { width: 4px; }
+        .ck-body::-webkit-scrollbar-track { background: transparent; }
+        .ck-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+
+        /* ---- Content Row (Image + Instruction) ---- */
+        .ck-content-row {
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            gap: 24px;
+            width: 100%;
+            max-width: 900px;
+            align-items: start;
+        }
+
+        /* ---- Recipe Image ---- */
+        .ck-recipe-img {
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            aspect-ratio: 4/3;
+            flex-shrink: 0;
+            position: sticky;
+            top: 0;
+        }
+        .ck-recipe-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .ck-no-image { display: none; }
+
+        /* ---- Instruction Card ---- */
+        .ck-instruction-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.09);
+            border-radius: var(--radius-lg);
+            padding: 28px 32px;
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+        }
+        .ck-instruction-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--clr-primary), var(--clr-accent));
+        }
+        .ck-step-number {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--clr-accent);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .ck-step-number::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255,255,255,0.08);
+        }
+        .ck-instruction-text {
+            font-size: 22px;
+            font-weight: 500;
+            line-height: 1.7;
+            color: rgba(255,255,255,0.92);
+            font-family: var(--font-body);
+        }
+        /* Step transition animation */
+        @keyframes ck-step-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .ck-step-animate {
+            animation: ck-step-in 0.35s cubic-bezier(0.4, 0, 0.2, 1) both;
+        }
+
+        /* ---- Ingredient Context ---- */
+        .ck-ingredient-context {
+            width: 100%;
+            max-width: 900px;
+        }
+        .ck-ingredient-chip-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .ck-ingredient-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: rgba(255,255,255,0.4);
+            margin-bottom: 2px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .ck-chip {
+            background: rgba(45, 106, 79, 0.25);
+            border: 1px solid rgba(45, 106, 79, 0.4);
+            color: rgba(255,255,255,0.8);
+            padding: 5px 12px;
+            border-radius: var(--radius-full);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        /* ---- Timer Card ---- */
+        .ck-timer-card {
+            width: 100%;
+            max-width: 900px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: var(--radius-lg);
+            padding: 24px 28px;
+        }
+        .ck-timer-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .ck-timer-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: rgba(255,255,255,0.35);
+        }
+        .ck-timer-display {
+            font-size: 72px;
+            font-weight: 700;
+            font-family: 'Outfit', monospace;
+            color: #fff;
+            line-height: 1;
+            letter-spacing: -2px;
+            text-align: center;
+            margin-bottom: 20px;
+            transition: color 0.3s ease;
+        }
+        .ck-timer-display.running { color: var(--clr-accent); }
+        .ck-timer-display.finished { color: var(--clr-success); }
+
+        /* Pulse ring when running */
+        @keyframes ck-pulse-ring {
+            0%   { box-shadow: 0 0 0 0 rgba(244, 162, 97, 0.35); }
+            70%  { box-shadow: 0 0 0 14px rgba(244, 162, 97, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(244, 162, 97, 0); }
+        }
+        .ck-timer-display-wrap {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .ck-timer-display-wrap.running .ck-timer-display {
+            animation: none;
+        }
+        .ck-timer-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .ck-timer-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            height: 48px;
+            padding: 0 20px;
+            border-radius: var(--radius-full);
+            font-family: var(--font-heading);
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            border: none;
+        }
+        .ck-timer-btn:focus-visible {
+            outline: 2px solid var(--clr-accent);
+            outline-offset: 2px;
+        }
+        .ck-timer-btn:active { transform: scale(0.96); }
+
+        .ck-timer-btn-adjust {
+            background: rgba(255,255,255,0.08);
+            color: rgba(255,255,255,0.75);
+            border: 1px solid rgba(255,255,255,0.12);
+            min-width: 100px;
+        }
+        .ck-timer-btn-adjust:hover {
+            background: rgba(255,255,255,0.14);
+            color: #fff;
+        }
+        .ck-timer-btn-primary {
+            background: var(--clr-accent);
+            color: #fff;
+            min-width: 140px;
+            box-shadow: 0 4px 16px rgba(244, 162, 97, 0.35);
+        }
+        .ck-timer-btn-primary:hover {
+            background: #e07a3a;
+            box-shadow: 0 6px 20px rgba(244, 162, 97, 0.5);
+        }
+        .ck-timer-btn-primary.paused {
+            background: rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.8);
+            box-shadow: none;
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+        .ck-timer-btn-primary.paused:hover {
+            background: rgba(255,255,255,0.16);
+            color: #fff;
+        }
+        .ck-timer-btn-reset {
+            background: transparent;
+            color: rgba(255,255,255,0.45);
+            border: 1px solid rgba(255,255,255,0.1);
+            font-size: 13px;
+            padding: 0 16px;
+        }
+        .ck-timer-btn-reset:hover {
+            color: rgba(255,255,255,0.75);
+            border-color: rgba(255,255,255,0.2);
+        }
+
+        /* Timer complete banner */
+        .ck-timer-complete {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 14px;
+            padding: 10px 20px;
+            background: rgba(42, 157, 143, 0.2);
+            border: 1px solid rgba(42, 157, 143, 0.4);
+            border-radius: var(--radius-full);
+            color: var(--clr-success);
+            font-weight: 700;
+            font-size: 15px;
+        }
+        .ck-timer-complete.visible { display: flex; }
+        @keyframes ck-complete-pop {
+            0%   { transform: scale(0.85); opacity: 0; }
+            60%  { transform: scale(1.06); }
+            100% { transform: scale(1);   opacity: 1; }
+        }
+        .ck-timer-complete.visible { animation: ck-complete-pop 0.4s cubic-bezier(0.4, 0, 0.2, 1) both; }
+
+        /* ---- Footer Navigation ---- */
+        .ck-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 28px;
+            background: rgba(15, 25, 35, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255,255,255,0.08);
+            z-index: 10;
+            gap: 12px;
+        }
+        .ck-nav-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 13px 24px;
+            border-radius: var(--radius-full);
+            font-family: var(--font-heading);
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            border: none;
+            transition: var(--transition-fast);
+            min-height: 50px;
+        }
+        .ck-nav-btn:focus-visible {
+            outline: 2px solid var(--clr-accent);
+            outline-offset: 2px;
+        }
+        .ck-nav-btn:active { transform: scale(0.97); }
+        .ck-nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .ck-btn-prev {
+            background: rgba(255,255,255,0.07);
+            color: rgba(255,255,255,0.75);
+            border: 1px solid rgba(255,255,255,0.12);
+        }
+        .ck-btn-prev:hover:not(:disabled) {
+            background: rgba(255,255,255,0.13);
+            color: #fff;
+        }
+        .ck-btn-next {
+            background: var(--clr-primary);
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(45, 106, 79, 0.4);
+        }
+        .ck-btn-next:hover:not(:disabled) {
+            background: var(--clr-primary-dark);
+            box-shadow: 0 6px 20px rgba(45, 106, 79, 0.55);
+        }
+        .ck-btn-finish {
+            background: linear-gradient(135deg, var(--clr-success), #22c55e);
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(42, 157, 143, 0.4);
+        }
+        .ck-btn-finish:hover {
+            box-shadow: 0 6px 24px rgba(42, 157, 143, 0.6);
+            transform: translateY(-1px);
+        }
+
+        /* ---- Completion Screen ---- */
+        .ck-complete-screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            padding: 40px 28px;
+            text-align: center;
+        }
+        .ck-complete-icon {
+            font-size: 72px;
+            margin-bottom: 20px;
+            line-height: 1;
+        }
+        @keyframes ck-bounce-in {
+            0%   { transform: scale(0.4); opacity: 0; }
+            55%  { transform: scale(1.12); }
+            75%  { transform: scale(0.95); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .ck-complete-icon.animate { animation: ck-bounce-in 0.6s cubic-bezier(0.4, 0, 0.2, 1) both; }
+        .ck-complete-title {
+            font-family: var(--font-heading);
+            font-size: 36px;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 12px;
+        }
+        .ck-complete-subtitle {
+            font-size: 17px;
+            color: rgba(255,255,255,0.55);
+            margin-bottom: 36px;
+            max-width: 420px;
+            line-height: 1.6;
+        }
+        .ck-complete-actions {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .ck-complete-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 28px;
+            border-radius: var(--radius-full);
+            font-family: var(--font-heading);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: var(--transition-fast);
+            text-decoration: none;
+        }
+        .ck-complete-btn-primary {
+            background: linear-gradient(135deg, var(--clr-primary), var(--clr-primary-light));
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(45,106,79,0.4);
+        }
+        .ck-complete-btn-primary:hover { box-shadow: 0 6px 24px rgba(45,106,79,0.55); transform: translateY(-1px); }
+        .ck-complete-btn-outline {
+            background: rgba(255,255,255,0.07);
+            border: 1.5px solid rgba(255,255,255,0.2);
+            color: rgba(255,255,255,0.8);
+        }
+        .ck-complete-btn-outline:hover { background: rgba(255,255,255,0.13); color: #fff; }
+
+        /* ---- Empty State ---- */
+        .ck-empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            padding: 60px 28px;
+            text-align: center;
+            gap: 16px;
+        }
+        .ck-empty-icon { font-size: 56px; }
+        .ck-empty-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.8);
+            font-family: var(--font-heading);
+        }
+        .ck-empty-sub {
+            font-size: 15px;
+            color: rgba(255,255,255,0.4);
+            max-width: 360px;
+            line-height: 1.6;
+        }
+
+        /* ============================================
+           RESPONSIVE — TABLET
+        ============================================ */
+        @media (max-width: 900px) {
+            .ck-content-row {
+                grid-template-columns: 1fr;
+            }
+            .ck-recipe-img {
+                display: none; /* hide on tablet, shown on mobile via different layout */
+            }
+            .layout-grid { grid-template-columns: 1fr; }
+        }
+
+        /* ============================================
+           RESPONSIVE — MOBILE
+        ============================================ */
+        @media (max-width: 600px) {
+            .ck-header { padding: 12px 16px; }
+            .ck-recipe-name { max-width: 140px; }
+            .ck-progress-bar { padding: 10px 16px 8px; }
+            .ck-body { padding: 16px 16px 110px; gap: 14px; }
+
+            .ck-content-row { grid-template-columns: 1fr; }
+
+            /* Show the image on mobile above instruction */
+            .ck-recipe-img {
+                display: block;
+                position: static;
+                border-radius: var(--radius-md);
+                aspect-ratio: 16/7;
+            }
+
+            .ck-instruction-card { padding: 20px; }
+            .ck-instruction-text { font-size: 19px; }
+
+            .ck-timer-card { padding: 18px 16px; }
+            .ck-timer-display { font-size: 56px; }
+
+            .ck-timer-controls { gap: 8px; }
+            .ck-timer-btn-adjust { min-width: 80px; font-size: 13px; padding: 0 12px; }
+            .ck-timer-btn-primary { min-width: 120px; }
+
+            .ck-footer { padding: 12px 16px; }
+            .ck-nav-btn { padding: 12px 18px; font-size: 14px; }
+
+            .ck-complete-title { font-size: 28px; }
+            .ck-complete-subtitle { font-size: 15px; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="logo">Cook<span>Wise</span></a>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="recipes.html" class="active">Recipes</a>
+                <a href="cuisines.html">Cuisines</a>
+                <a href="meal-planner.html">Meal Planner</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container" style="margin-bottom: 80px;" id="recipe-container">
+        <!-- Content injected via JS -->
+        <div class="text-center mt-4">
+            <h2>Loading recipe details...</h2>
+        </div>
+    </main>
+
+    <!-- Cooking Mode — Redesigned -->  
+    <div class="cooking-mode-overlay" id="cooking-mode" role="dialog" aria-label="Cooking Mode" aria-modal="true">
+
+        <!-- HEADER -->
+        <header class="ck-header">
+            <div class="ck-header-left">
+                <div class="ck-logo-mark" aria-hidden="true">🍳</div>
+                <div class="ck-header-titles">
+                    <h2>Cooking Mode</h2>
+                    <div class="ck-recipe-name" id="ck-recipe-name">Loading…</div>
+                </div>
+            </div>
+            <button class="ck-exit-btn" id="btn-exit-cooking" aria-label="Exit Cooking Mode">
+                ✕ Exit
+            </button>
+        </header>
+
+        <!-- PROGRESS -->
+        <div class="ck-progress-bar" id="ck-progress-bar" aria-label="Cooking progress">
+            <div class="ck-progress-top">
+                <span class="ck-step-label" id="cooking-step-counter">STEP 1 OF 1</span>
+                <span class="ck-progress-pct" id="ck-pct">0%</span>
+            </div>
+            <div class="ck-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" id="ck-progressbar-role">
+                <div class="ck-progress-fill" id="ck-progress-fill" style="width: 0%"></div>
+            </div>
+            <div class="ck-step-dots" id="ck-step-dots" aria-hidden="true"></div>
+        </div>
+
+        <!-- MAIN COOKING CONTENT (steps) -->
+        <div class="ck-body" id="ck-cooking-body">
+
+            <!-- Recipe image + Instruction in a row on desktop, stacked on mobile -->
+            <div class="ck-content-row">
+
+                <!-- Recipe thumbnail (hidden if no image) -->
+                <div class="ck-recipe-img" id="ck-recipe-img-wrap">
+                    <img id="ck-recipe-img" src="" alt="Recipe" />
+                </div>
+
+                <!-- Instruction card -->
+                <div class="ck-instruction-card" id="ck-instruction-card">
+                    <div class="ck-step-number" id="ck-step-number-label">Step 1</div>
+                    <div class="ck-instruction-text" id="cooking-instruction-text" aria-live="polite" aria-atomic="true">
+                        Loading instruction…
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ingredient context for this step -->
+            <div class="ck-ingredient-context" id="ck-ingredient-context" style="display:none">
+                <div class="ck-ingredient-label">
+                    <span>🧂</span> Ingredients used in this step:
+                </div>
+                <div class="ck-ingredient-chip-row" id="ck-ingredient-chips"></div>
+            </div>
+
+            <!-- Timer card -->
+            <div class="ck-timer-card">
+                <div class="ck-timer-header">
+                    <span class="ck-timer-title">⏱ Timer</span>
+                </div>
+
+                <div class="ck-timer-display-wrap" id="ck-timer-wrap">
+                    <div class="ck-timer-display" id="cooking-timer" aria-live="polite" aria-atomic="true">00:00</div>
+                </div>
+
+                <div class="ck-timer-complete" id="ck-timer-complete" role="status">
+                    ✅ Timer Complete!
+                </div>
+
+                <div class="ck-timer-controls">
+                    <button class="ck-timer-btn ck-timer-btn-adjust" id="btn-timer-minus" aria-label="Subtract 1 minute">
+                        − 1 Min
+                    </button>
+                    <button class="ck-timer-btn ck-timer-btn-primary" id="btn-timer-toggle" aria-label="Start timer">
+                        ▶ Start
+                    </button>
+                    <button class="ck-timer-btn ck-timer-btn-adjust" id="btn-timer-start" aria-label="Add 1 minute">
+                        + 1 Min
+                    </button>
+                </div>
+                <div style="display:flex; justify-content:center; margin-top:10px;">
+                    <button class="ck-timer-btn ck-timer-btn-reset" id="btn-timer-reset" aria-label="Reset timer">
+                        Reset
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- COMPLETION SCREEN (hidden until finish) -->
+        <div class="ck-complete-screen" id="ck-complete-screen">
+            <div class="ck-complete-icon" id="ck-complete-icon">🎉</div>
+            <div class="ck-complete-title">Recipe Complete!</div>
+            <div class="ck-complete-subtitle" id="ck-complete-subtitle">
+                Great job! Your dish is ready to serve.
+            </div>
+            <div class="ck-complete-actions">
+                <button class="ck-complete-btn ck-complete-btn-primary" id="ck-btn-view-recipe">
+                    📖 View Recipe
+                </button>
+                <a href="meal-planner.html" class="ck-complete-btn ck-complete-btn-outline">
+                    📅 Meal Planner
+                </a>
+                <a href="index.html" class="ck-complete-btn ck-complete-btn-outline">
+                    🏠 Home
+                </a>
+            </div>
+        </div>
+
+        <!-- STICKY FOOTER NAV -->
+        <nav class="ck-footer" id="ck-footer" aria-label="Step navigation">
+            <button class="ck-nav-btn ck-btn-prev" id="btn-cook-prev" aria-label="Previous step" disabled>
+                ← Previous
+            </button>
+            <button class="ck-nav-btn ck-btn-next" id="btn-cook-next" aria-label="Next step">
+                Next Step →
+            </button>
+            <button class="ck-nav-btn ck-btn-finish" id="btn-cook-finish" style="display:none" aria-label="Finish cooking">
+                ✅ Finish Cooking
+            </button>
+        </nav>
+
+    </div>
+
+    <script src="./js/app.js"></script>
+    <script src="./js/recipe-details.js"></script>
+</body>
+</html>

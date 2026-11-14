@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping List | CookWise</title>
+    <meta name="description" content="Manage your CookWise shopping list — add, check off, and clear grocery items.">
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/recipe.css">
+    <style>
+        body { background: #F1F5F9; }
+
+        .page-header { padding: 40px 0 28px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+        .page-header h1 { font-size: 36px; }
+
+        .list-layout {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 32px;
+            margin-bottom: 80px;
+            align-items: start;
+        }
+
+        /* Add form */
+        .add-card {
+            background: var(--clr-white);
+            border-radius: var(--radius-md);
+            padding: 28px;
+            box-shadow: var(--shadow-sm);
+            position: sticky; top: 90px;
+        }
+
+        .add-card h2 { font-size: 18px; margin-bottom: 20px; }
+
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+        /* Shopping list card */
+        .list-card {
+            background: var(--clr-white);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+        }
+
+        .list-toolbar {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--clr-border);
+            display: flex; align-items: center; justify-content: space-between;
+            flex-wrap: wrap; gap: 12px;
+        }
+
+        .list-toolbar h2 { font-size: 18px; }
+
+        .toolbar-actions { display: flex; gap: 8px; }
+
+        /* Items */
+        .shop-item {
+            display: flex; align-items: center;
+            gap: 16px; padding: 16px 24px;
+            border-bottom: 1px solid var(--clr-border);
+            transition: var(--transition-fast);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+
+        .shop-item:last-child { border-bottom: none; }
+        .shop-item.checked    { background: #F8FAFC; }
+
+        .shop-checkbox {
+            width: 22px; height: 22px;
+            border: 2px solid var(--clr-border);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; transition: var(--transition-fast);
+        }
+
+        .shop-checkbox.checked {
+            background: var(--clr-primary);
+            border-color: var(--clr-primary);
+            color: white;
+        }
+
+        .shop-item-info { flex: 1; }
+
+        .shop-item-name {
+            font-weight: 600; font-size: 15px;
+            transition: var(--transition-fast);
+        }
+
+        .shop-item.checked .shop-item-name {
+            text-decoration: line-through;
+            color: var(--clr-text-muted);
+        }
+
+        .shop-item-meta { font-size: 13px; color: var(--clr-text-muted); margin-top: 2px; }
+
+        .btn-delete-shop {
+            background: none; border: none;
+            color: var(--clr-text-muted);
+            cursor: pointer; font-size: 18px;
+            padding: 4px; opacity: 0;
+            transition: var(--transition-fast);
+        }
+
+        .shop-item:hover .btn-delete-shop { opacity: 1; color: var(--clr-danger); }
+
+        /* Progress bar */
+        .progress-bar-wrap {
+            padding: 16px 24px;
+            background: #F8FAFC;
+            border-bottom: 1px solid var(--clr-border);
+        }
+
+        .progress-bar-track {
+            height: 8px;
+            background: #E2E8F0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--clr-primary);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .progress-label {
+            display: flex; justify-content: space-between;
+            font-size: 13px; color: var(--clr-text-muted);
+            margin-bottom: 8px;
+        }
+
+        /* Tip box */
+        .tip-box {
+            background: #EFF6FF;
+            border-left: 3px solid #3B82F6;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            padding: 14px 16px;
+            font-size: 13px; color: #1E3A5F;
+            line-height: 1.5; margin-top: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .list-layout { grid-template-columns: 1fr; }
+            .add-card { position: static; }
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar">
+    <div class="container">
+        <a href="index.html" class="logo">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 12h20"/><path d="M20 12v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8"/>
+                <path d="M4 12V8a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v4"/>
+            </svg>
+            Cook<span>Wise</span>
+        </a>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="recipes.html">Recipes</a>
+            <a href="dashboard.html" class="btn btn-outline">Dashboard</a>
+            <button class="btn btn-primary" id="nav-logout-btn">Logout</button>
+        </div>
+    </div>
+</nav>
+
+<main class="container">
+    <div class="page-header">
+        <div>
+            <h1>🛒 Shopping List</h1>
+            <p style="color:var(--clr-text-muted);">Track what you need to buy.</p>
+        </div>
+        <a href="meal-planner.html" class="btn btn-accent">📅 Go to Meal Planner</a>
+    </div>
+
+    <div class="list-layout">
+
+        <!-- Add item form -->
+        <div class="add-card">
+            <h2>Add Item</h2>
+            <form id="add-form">
+                <div class="input-group">
+                    <label for="item-name">Item Name *</label>
+                    <input type="text" id="item-name" class="input-control"
+                           placeholder="e.g. Chicken Breast" required>
+                </div>
+                <div class="form-row">
+                    <div class="input-group">
+                        <label for="item-qty">Quantity</label>
+                        <input type="number" id="item-qty" class="input-control"
+                               placeholder="e.g. 500" min="0" step="0.1">
+                    </div>
+                    <div class="input-group">
+                        <label for="item-unit">Unit</label>
+                        <select id="item-unit" class="input-control">
+                            <option value="">None</option>
+                            <option value="g">g</option>
+                            <option value="kg">kg</option>
+                            <option value="ml">ml</option>
+                            <option value="L">L</option>
+                            <option value="pcs">pcs</option>
+                            <option value="cup">cup</option>
+                            <option value="tbsp">tbsp</option>
+                            <option value="tsp">tsp</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width:100%;"
+                        id="add-btn">➕ Add to List</button>
+            </form>
+
+            <div class="tip-box">
+                💡 <strong>Tip:</strong> Generate a meal plan in the
+                <a href="meal-planner.html" style="color:var(--clr-primary);">Meal Planner</a>,
+                then return here to manually add missing ingredients you don't have in your pantry.
+            </div>
+        </div>
+
+        <!-- Shopping list -->
+        <div class="list-card">
+            <div class="list-toolbar">
+                <h2>My List <span id="list-count" style="color:var(--clr-text-muted); font-weight:400;"></span></h2>
+                <div class="toolbar-actions">
+                    <button class="btn btn-outline" style="font-size:13px; padding:8px 16px;"
+                            onclick="clearChecked()">✓ Clear Purchased</button>
+                    <button class="btn btn-outline" style="font-size:13px; padding:8px 16px; color:var(--clr-danger);"
+                            onclick="clearAll()">🗑️ Clear All</button>
+                </div>
+            </div>
+
+            <!-- Progress -->
+            <div class="progress-bar-wrap">
+                <div class="progress-label">
+                    <span id="progress-text">0 of 0 purchased</span>
+                    <span id="progress-pct">0%</span>
+                </div>
+                <div class="progress-bar-track">
+                    <div class="progress-bar-fill" id="progress-fill" style="width:0%;"></div>
+                </div>
+            </div>
+
+            <!-- Items -->
+            <div id="shop-list">
+                <div style="text-align:center; padding:48px 24px; color:var(--clr-text-muted);">
+                    Loading…
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<script src="./js/app.js"></script>
+<script>
+let shopItems = [];
+
+document.addEventListener('DOMContentLoaded', async () => {
+    const user = await window.authPromise;
+    if (!user) { window.location.href = 'login.html'; return; }
+    loadList();
+});
+
+/* ── Load ───────────────────────────────────────────── */
+async function loadList() {
+    try {
+        const res = await fetch(`${API_BASE_URL}/shopping-list`);
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        shopItems = data.items || [];
+        renderList();
+    } catch (e) {
+        document.getElementById('shop-list').innerHTML =
+            '<p style="color:var(--clr-danger); padding:24px;">Unable to load list. Please refresh.</p>';
+    }
+}
+
+function renderList() {
+    const list       = document.getElementById('shop-list');
+    const countEl    = document.getElementById('list-count');
+    const progressEl = document.getElementById('progress-text');
+    const pctEl      = document.getElementById('progress-pct');
+    const fillEl     = document.getElementById('progress-fill');
+
+    const total   = shopItems.length;
+    const checked = shopItems.filter(i => i.is_checked).length;
+    const pct     = total > 0 ? Math.round((checked / total) * 100) : 0;
+
+    countEl.textContent  = `(${total} item${total !== 1 ? 's' : ''})`;
+    progressEl.textContent = `${checked} of ${total} purchased`;
+    pctEl.textContent      = `${pct}%`;
+    fillEl.style.width     = `${pct}%`;
+
+    if (total === 0) {
+        list.innerHTML = `
+            <div style="text-align:center; padding:64px 24px;">
+                <div style="font-size:48px; opacity:0.4; margin-bottom:16px;">🛒</div>
+                <p style="color:var(--clr-text-muted);">Your shopping list is empty.</p>
+                <p style="font-size:13px; color:var(--clr-text-muted); margin-top:8px;">
+                    Add items using the form, or generate a meal plan to find what you need.
+                </p>
+            </div>`;
+        return;
+    }
+
+    // Sort: unchecked first
+    const sorted = [...shopItems].sort((a, b) => (a.is_checked ? 1 : 0) - (b.is_checked ? 1 : 0));
+
+    list.innerHTML = sorted.map(item => {
+        const checked = item.is_checked ? 'checked' : '';
+        const qty = item.quantity ? `${item.quantity}${item.unit ? ' ' + item.unit : ''}` : '';
+        return `
+        <div class="shop-item ${checked}" data-id="${item.id}">
+            <div class="shop-checkbox ${checked}" onclick="toggleCheck(${item.id}, ${!item.is_checked})">
+                ${item.is_checked ? '✓' : ''}
+            </div>
+            <div class="shop-item-info">
+                <div class="shop-item-name">${item.ingredient_name}</div>
+                ${qty ? `<div class="shop-item-meta">${qty}</div>` : ''}
+            </div>
+            <button class="btn-delete-shop" onclick="deleteItem(${item.id})" title="Delete">✕</button>
+        </div>`;
+    }).join('');
+}
+
+/* ── Add ────────────────────────────────────────────── */
+document.getElementById('add-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('item-name').value.trim();
+    if (!name) return;
+
+    const btn = document.getElementById('add-btn');
+    btn.disabled = true; btn.textContent = 'Adding…';
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/shopping-list`, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({
+                ingredient_name: name,
+                quantity: document.getElementById('item-qty').value || null,
+                unit:     document.getElementById('item-unit').value || null
+            })
+        });
+
+        if (res.ok) {
+            document.getElementById('add-form').reset();
+            loadList();
+        } else {
+            alert('Could not add item.');
+        }
+    } catch (e) { alert('Network error.'); }
+    finally { btn.disabled = false; btn.textContent = '➕ Add to List'; }
+});
+
+/* ── Toggle check ───────────────────────────────────── */
+async function toggleCheck(id, checked) {
+    try {
+        await fetch(`${API_BASE_URL}/shopping-list/${id}`, {
+            method:  'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ is_checked: checked })
+        });
+        const item = shopItems.find(i => i.id === id);
+        if (item) item.is_checked = checked;
+        renderList();
+    } catch (e) { console.error(e); }
+}
+
+/* ── Delete ─────────────────────────────────────────── */
+async function deleteItem(id) {
+    try {
+        const res = await fetch(`${API_BASE_URL}/shopping-list/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+            shopItems = shopItems.filter(i => i.id !== id);
+            renderList();
+        }
+    } catch (e) { alert('Network error.'); }
+}
+
+/* ── Clear checked ──────────────────────────────────── */
+async function clearChecked() {
+    const checked = shopItems.filter(i => i.is_checked);
+    if (checked.length === 0) { alert('No purchased items to clear.'); return; }
+    if (!confirm(`Remove ${checked.length} purchased item(s)?`)) return;
+
+    await Promise.all(checked.map(i =>
+        fetch(`${API_BASE_URL}/shopping-list/${i.id}`, { method: 'DELETE' })
+    ));
+    shopItems = shopItems.filter(i => !i.is_checked);
+    renderList();
+}
+
+/* ── Clear all ──────────────────────────────────────── */
+async function clearAll() {
+    if (shopItems.length === 0) return;
+    if (!confirm(`Remove ALL ${shopItems.length} items?`)) return;
+
+    await Promise.all(shopItems.map(i =>
+        fetch(`${API_BASE_URL}/shopping-list/${i.id}`, { method: 'DELETE' })
+    ));
+    shopItems = [];
+    renderList();
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipes | CookWise</title>
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/recipe.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M2 12h20"/><path d="M20 12v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8"/><path d="M4 12V8a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v4"/>
+                </svg>
+                Cook<span>Wise</span>
+            </a>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="recipes.html" class="active">Recipes</a>
+                <a href="cuisines.html">Cuisines</a>
+                <a href="meal-planner.html">Meal Planner</a>
+                <a href="nutrition.html">Nutrition</a>
+                <a href="login.html" class="btn btn-outline" id="nav-login-btn">Login</a>
+                <a href="register.html" class="btn btn-primary" id="nav-register-btn">Register</a>
+                <a href="dashboard.html" class="btn btn-primary" id="nav-dashboard-btn" style="display: none;">Dashboard</a>
+                <button class="btn btn-outline" id="nav-logout-btn" style="display: none;">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container" style="margin-top: 40px; margin-bottom: 80px;">
+        <div class="text-center mb-4">
+            <h1>Discover Recipes</h1>
+            <p style="color: var(--clr-text-muted);">Find what to cook with ingredients you have.</p>
+        </div>
+
+        <form class="search-container mb-4" id="recipes-search-form">
+            <input type="text" id="recipes-search-input" class="search-input" placeholder="Enter ingredients (e.g., chicken, onion)">
+            <div class="search-buttons">
+                <button type="submit" class="btn btn-primary">Search</button>
+            </div>
+        </form>
+        
+        <div class="mb-4 text-center">
+            <span style="font-size: 14px; color: var(--clr-text-muted); font-style: italic;">
+                Tip: Separate multiple ingredients with commas for strict matching.
+            </span>
+        </div>
+
+        <div id="loading-state" style="display: none;" class="grid grid-3">
+            <div class="recipe-card skeleton"><div class="recipe-img-container"><div class="skeleton-img"></div></div><div class="recipe-content"><div class="skeleton-text"></div><div class="skeleton-text short"></div></div></div>
+            <div class="recipe-card skeleton"><div class="recipe-img-container"><div class="skeleton-img"></div></div><div class="recipe-content"><div class="skeleton-text"></div><div class="skeleton-text short"></div></div></div>
+            <div class="recipe-card skeleton"><div class="recipe-img-container"><div class="skeleton-img"></div></div><div class="recipe-content"><div class="skeleton-text"></div><div class="skeleton-text short"></div></div></div>
+        </div>
+
+        <div id="results-meta" class="mb-3" style="display: none; font-weight: 600;"></div>
+
+        <div class="grid grid-3" id="recipes-grid">
+            <!-- Results injected here -->
+        </div>
+
+    </main>
+
+    <script src="./js/app.js"></script>
+    <script src="./js/recipes.js"></script>
+</body>
+</html>

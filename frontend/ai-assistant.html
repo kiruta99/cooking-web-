@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chef | CookWise</title>
+    <link rel="stylesheet" href="./css/style.css">
+    <style>
+        .ai-container {
+            max-width: 800px;
+            margin: 40px auto;
+            background: var(--clr-white);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            display: flex;
+            flex-direction: column;
+            height: 70vh;
+        }
+        
+        .ai-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--clr-border);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .ai-avatar {
+            font-size: 32px;
+        }
+        
+        .ai-chat-area {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            background: #f9fafb;
+        }
+        
+        .message {
+            max-width: 80%;
+            padding: 16px;
+            border-radius: var(--radius-md);
+            line-height: 1.5;
+        }
+        
+        .message.ai {
+            background: var(--clr-white);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .message.user {
+            background: var(--clr-primary);
+            color: var(--clr-white);
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .ai-input-area {
+            padding: 24px;
+            border-top: 1px solid var(--clr-border);
+            display: flex;
+            gap: 12px;
+        }
+        
+        .ai-input {
+            flex: 1;
+            padding: 16px;
+            border: 1px solid var(--clr-border);
+            border-radius: var(--radius-full);
+            font-family: var(--font-body);
+            font-size: 16px;
+        }
+        
+        .ai-input:focus {
+            outline: none;
+            border-color: var(--clr-primary);
+        }
+        
+        .ai-recipe-card {
+            background: #FFFBEB;
+            border: 1px solid #FDE68A;
+            border-radius: var(--radius-md);
+            padding: 24px;
+            margin-top: 16px;
+        }
+        
+        .ai-recipe-card h4 {
+            color: #D97706;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="logo">Cook<span>Wise</span></a>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="recipes.html">Recipes</a>
+                <a href="ai-assistant.html" class="active">AI Chef</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div class="ai-container">
+            <div class="ai-header">
+                <div class="ai-avatar">✨</div>
+                <div>
+                    <h2 style="font-size: 20px;">AI Chef Assistant</h2>
+                    <p style="font-size: 14px; color: var(--clr-text-muted);">Ask for substitutions, cooking tips, or generate a recipe.</p>
+                </div>
+            </div>
+            
+            <div class="ai-chat-area" id="chat-area">
+                <div class="message ai">
+                    Hello! I'm your CookWise AI Chef. I can help you with cooking tips, ingredient substitutions, or even generate a unique recipe based on what you have! How can I help you today?
+                </div>
+            </div>
+            
+            <form class="ai-input-area" id="chat-form">
+                <input type="text" id="chat-input" class="ai-input" placeholder="e.g. Generate a recipe with chicken and potato..." required autocomplete="off">
+                <button type="submit" class="btn btn-primary" style="border-radius: var(--radius-full); width: 60px; padding: 0;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
+            </form>
+        </div>
+    </main>
+
+    <script src="./js/app.js"></script>
+    <script>
+        document.getElementById('chat-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            if (!message) return;
+            
+            appendMessage('user', message);
+            input.value = '';
+            
+            // Check if user is asking to generate a recipe
+            if (message.toLowerCase().includes('generate a recipe') || message.toLowerCase().includes('create a recipe')) {
+                // Extract possible ingredients - mock simple logic
+                const words = message.toLowerCase().split(' ');
+                const possibleIngs = words.filter(w => w !== 'generate' && w !== 'create' && w !== 'recipe' && w !== 'with' && w !== 'a' && w !== 'and');
+                
+                try {
+                    const res = await fetch(`${API_BASE_URL}/ai/generate-recipe`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ ingredients: possibleIngs.length > 0 ? possibleIngs : ['mystery ingredients'] })
+                    });
+                    
+                    if (res.ok) {
+                        const data = await res.json();
+                        appendRecipe(data.recipe);
+                    } else {
+                        appendMessage('ai', 'You need to be logged in to use this feature.');
+                    }
+                } catch(err) {
+                    appendMessage('ai', 'Error connecting to AI service.');
+                }
+            } else {
+                try {
+                    const res = await fetch(`${API_BASE_URL}/ai/chat`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message })
+                    });
+                    
+                    if (res.ok) {
+                        const data = await res.json();
+                        appendMessage('ai', data.reply);
+                    } else {
+                        appendMessage('ai', 'You need to be logged in to use the AI Chef.');
+                    }
+                } catch(err) {
+                    appendMessage('ai', 'Error connecting to AI service.');
+                }
+            }
+        });
+        
+        function appendMessage(role, text) {
+            const chatArea = document.getElementById('chat-area');
+            const div = document.createElement('div');
+            div.className = `message ${role}`;
+            div.textContent = text;
+            chatArea.appendChild(div);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+        
+        function appendRecipe(recipe) {
+            const chatArea = document.getElementById('chat-area');
+            const div = document.createElement('div');
+            div.className = 'message ai';
+            
+            div.innerHTML = `
+                <div class="ai-recipe-card">
+                    <h4>✨ AI Generated Recipe</h4>
+                    <p style="font-weight: 600; font-size: 18px; margin-bottom: 12px; color: var(--clr-text-main);">${recipe.name}</p>
+                    <div style="font-size: 14px; color: var(--clr-text-muted); margin-bottom: 16px;">
+                        <strong>Nutrition (AI-estimated):</strong><br>
+                        Calories: ${recipe.nutrition.calories} | Protein: ${recipe.nutrition.protein}
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <strong>Ingredients:</strong><br>
+                        ${recipe.ingredients.join(', ')}
+                    </div>
+                    <div style="white-space: pre-wrap;"><strong>Instructions:</strong><br>${recipe.instructions}</div>
+                </div>
+            `;
+            
+            chatArea.appendChild(div);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+    </script>
+</body>
+</html>
